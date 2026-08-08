@@ -210,6 +210,21 @@
       transition: background 0.3s;
       max-height: 90vh; overflow-y: auto;
     }
+    /* V9.4 — auth OTP must sit above the full-screen login overlay (z-index 500). */
+    #modal-auth-otp, #modal-password-recovery { z-index: 760; }
+    #modal-auth-otp .modal-content, #modal-password-recovery .modal-content { box-shadow: 0 30px 80px -28px rgba(0,0,0,.65); }
+    .auth-pending-otp {
+      display:none; margin:10px auto 0; width:100%; max-width:500px; text-align:center;
+    }
+    .auth-pending-otp.show { display:block; }
+    .auth-pending-otp button {
+      width:100%; border:1px solid rgba(255,255,255,.42); background:rgba(255,255,255,.14); color:#fff;
+      border-radius:14px; padding:11px 14px; font-weight:800; cursor:pointer; backdrop-filter:blur(10px);
+      transition:transform .16s ease, background .16s ease;
+    }
+    .auth-pending-otp button:hover { background:rgba(255,255,255,.20); }
+    .auth-pending-otp button:active { transform:scale(.985); }
+    .auth-pending-otp small { display:block; margin-top:6px; color:rgba(255,255,255,.82); font-size:.68rem; line-height:1.45; }
     @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
@@ -3993,7 +4008,11 @@
     </div>
 
     <p id="auth-message" class="auth-message" aria-live="polite"></p>
-    <p class="auth-security-note">KITA TABUNG tidak pernah meminta PIN, OTP, atau password melalui chat.</p>
+    <div id="auth-pending-otp" class="auth-pending-otp">
+      <button type="button" onclick="reopenPendingEmailOtp()"><i class="fa-solid fa-shield-halved" style="margin-right:7px;"></i>Masukkan Kode Verifikasi</button>
+      <small id="auth-pending-otp-hint">Kode sudah dikirim ke email kamu.</small>
+    </div>
+    <p class="auth-security-note">Masukkan kode OTP hanya di halaman resmi KITA TABUNG. Jangan pernah membagikannya melalui chat.</p>
   </div>
 </div>
 
@@ -4012,7 +4031,7 @@
     <form id="form-auth-otp">
       <div class="form-group">
         <label class="form-label" for="auth-otp-code">Kode verifikasi</label>
-        <input type="text" id="auth-otp-code" class="form-control" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Masukkan kode dari email" required>
+        <input type="text" id="auth-otp-code" class="form-control" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Contoh: 123456" required>
       </div>
       <p id="auth-otp-message" class="auth-message" aria-live="polite" style="margin:0 0 12px;"></p>
       <button type="submit" id="auth-otp-submit" class="btn-submit">Verifikasi Kode</button>
@@ -4120,8 +4139,60 @@ let cloudSyncTimer = null;
 let cloudSyncRunning = false;
 let cloudLastSavedAt = null;
 
-// V9.3: email OTP flow avoids mobile email-link redirects entirely.
+// V9.4: OTP entry is visible above login, persists across mobile app switching, and can be reopened from the auth screen.
 let pendingEmailOtp = { flow: null, email: '', displayName: '', emoji: '' };
+const PENDING_EMAIL_OTP_KEY = 'KITA_TABUNG_PENDING_EMAIL_OTP_V1';
+
+function updatePendingOtpEntry() {
+  const box = $('auth-pending-otp');
+  const hint = $('auth-pending-otp-hint');
+  const valid = !!(pendingEmailOtp?.flow && pendingEmailOtp?.email);
+  if (box) box.classList.toggle('show', valid);
+  if (hint && valid) {
+    const label = pendingEmailOtp.flow === 'recovery' ? 'Kode reset password' : 'Kode verifikasi akun';
+    hint.textContent = `${label} dikirim ke ${pendingEmailOtp.email}.`;
+  }
+}
+
+function savePendingEmailOtp() {
+  try {
+    if (pendingEmailOtp?.flow && pendingEmailOtp?.email) {
+      localStorage.setItem(PENDING_EMAIL_OTP_KEY, JSON.stringify({
+        flow: pendingEmailOtp.flow, email: pendingEmailOtp.email,
+        displayName: pendingEmailOtp.displayName || '', emoji: pendingEmailOtp.emoji || ''
+      }));
+    } else {
+      localStorage.removeItem(PENDING_EMAIL_OTP_KEY);
+    }
+  } catch (_) {}
+  updatePendingOtpEntry();
+}
+
+function restorePendingEmailOtp() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PENDING_EMAIL_OTP_KEY) || 'null');
+    if (saved && ['signup','recovery'].includes(saved.flow) && saved.email) {
+      pendingEmailOtp = {
+        flow: saved.flow, email: String(saved.email),
+        displayName: String(saved.displayName || ''), emoji: String(saved.emoji || '')
+      };
+    }
+  } catch (_) {}
+  updatePendingOtpEntry();
+}
+
+function clearPendingEmailOtp() {
+  pendingEmailOtp = { flow: null, email: '', displayName: '', emoji: '' };
+  savePendingEmailOtp();
+}
+
+function reopenPendingEmailOtp() {
+  if (!pendingEmailOtp?.flow || !pendingEmailOtp?.email) {
+    showAuthMessage('Belum ada kode aktif. Buat akun atau minta reset password terlebih dahulu.', true);
+    return;
+  }
+  openAuthOtpModal(pendingEmailOtp.flow, pendingEmailOtp.email);
+}
 
 function isSupabaseConfigured() {
   return /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SUPABASE_URL) &&
@@ -7770,6 +7841,7 @@ function toggleAuthPassword(inputId, button) {
 
 async function handleAuthenticatedUser(user) {
   if (!user) return;
+  clearPendingEmailOtp();
   showAuthMessage('Mengambil dan menyinkronkan data keuangan...');
   await hydrateUserFinanceData(user);
   closeModal('modal-login');
@@ -7800,6 +7872,7 @@ async function registerUser(email, password) {
 
   if (!data.session) {
     pendingEmailOtp = { flow: 'signup', email, displayName, emoji };
+    savePendingEmailOtp();
     showAuthMessage('Kode verifikasi sudah dikirim ke email. Masukkan kode tersebut untuk mengaktifkan akun.');
     openAuthOtpModal('signup', email);
     return;
@@ -7825,6 +7898,7 @@ async function sendPasswordReset() {
     });
     if (error) throw error;
     pendingEmailOtp = { flow: 'recovery', email, displayName: '', emoji: '' };
+    savePendingEmailOtp();
     showAuthMessage('Kode reset password sudah dikirim ke email.');
     openAuthOtpModal('recovery', email);
   } catch (error) {
@@ -7845,6 +7919,7 @@ function setAuthOtpMessage(message = '', isError = false) {
 function openAuthOtpModal(flow, email) {
   pendingEmailOtp.flow = flow;
   pendingEmailOtp.email = email || pendingEmailOtp.email || '';
+  savePendingEmailOtp();
   const isRecovery = flow === 'recovery';
   if ($('auth-otp-title')) $('auth-otp-title').textContent = isRecovery ? 'Kode Reset Password' : 'Verifikasi Email';
   if ($('auth-otp-description')) $('auth-otp-description').textContent = isRecovery
@@ -7886,7 +7961,7 @@ async function verifyEmailOtp(event) {
     closeModal('modal-auth-otp');
 
     if (flow === 'recovery') {
-      pendingEmailOtp = { flow: null, email: '', displayName: '', emoji: '' };
+      clearPendingEmailOtp();
       openPasswordRecoveryModal();
       return;
     }
@@ -7898,7 +7973,7 @@ async function verifyEmailOtp(event) {
       };
       await handleAuthenticatedUser(data.user);
     }
-    pendingEmailOtp = { flow: null, email: '', displayName: '', emoji: '' };
+    clearPendingEmailOtp();
     showToast('Email berhasil diverifikasi. Akun KITA TABUNG sudah aktif.');
   } catch (error) {
     setAuthOtpMessage(error?.message || 'Kode salah atau sudah kedaluwarsa. Kirim kode baru lalu coba lagi.', true);
@@ -8255,6 +8330,7 @@ window.onload = async () => {
   preventPullToRefresh();
   checkAIConnection();
   initializeSupabaseClient();
+  restorePendingEmailOtp();
 
   let directAuthResult = { handled: false };
   if (supabaseClient) {
@@ -8279,6 +8355,7 @@ window.onload = async () => {
     if (error) console.error('Session Supabase gagal:', error);
 
     if (session?.user) {
+      clearPendingEmailOtp();
       if (!activeUserId) await hydrateUserFinanceData(session.user);
       if ($('setting-account-email')) $('setting-account-email').textContent = activeUserEmail || '-';
     } else {

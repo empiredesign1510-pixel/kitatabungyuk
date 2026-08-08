@@ -1,3 +1,11 @@
+KITA TABUNG V9.4 — OTP ENTRY MOBILE FIX
+
+Perubahan:
+- Modal kode verifikasi sekarang berada di atas layar login (fix z-index).
+- Tombol Masukkan Kode Verifikasi muncul setelah signup/reset.
+- Status email + jenis OTP disimpan lokal agar tetap ada setelah berpindah ke aplikasi email lalu kembali.
+- Kode tetap diverifikasi oleh Supabase; OTP tidak disimpan.
+
 KITA TABUNG V9.3 — OTP AUTH MOBILE FIX
 ======================================
 
