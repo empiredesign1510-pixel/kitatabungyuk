@@ -4057,6 +4057,7 @@
 // Publishable Key: gunakan sb_publishable_... atau anon key, JANGAN secret/service_role.
 const SUPABASE_URL = 'https://xmodzjfhsrqgunrkrwbp.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_CzFv_8l_3Dl9zYh0axf6yA_gssPk3AR';
+const AUTH_REDIRECT_URL = 'https://www.kitabung.online/';
 
 const LEGACY_STORAGE_KEY = 'GENZ_MONEY_DATA_V2';
 const LEGACY_OWNER_KEY = 'KITA_TABUNG_LEGACY_OWNER';
@@ -7741,7 +7742,7 @@ async function registerUser(email, password) {
     password,
     options: {
       data: { display_name: displayName, emoji },
-      emailRedirectTo: window.location.origin + window.location.pathname
+      emailRedirectTo: AUTH_REDIRECT_URL
     }
   });
   if (error) throw error;
@@ -7769,7 +7770,7 @@ async function sendPasswordReset() {
   setAuthBusy(true);
   try {
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + window.location.pathname
+      redirectTo: AUTH_REDIRECT_URL
     });
     if (error) throw error;
     showAuthMessage('Tautan reset password sudah dikirim ke email.');
