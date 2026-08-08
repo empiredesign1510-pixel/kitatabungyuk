@@ -2926,6 +2926,58 @@
       .home-goal-numbers { flex-direction:column; }
     }
 
+
+
+/* ================= RECEIPT SCANNER V9 ================= */
+.receipt-scan-box {
+  margin: 0 0 18px;
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface) 92%, var(--primary) 8%);
+}
+.receipt-scan-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.receipt-scan-title { display:flex; align-items:center; gap:10px; min-width:0; }
+.receipt-scan-icon { width:36px; height:36px; border-radius:12px; display:grid; place-items:center; flex:0 0 auto; background:color-mix(in srgb, var(--primary) 16%, transparent); color:var(--primary); }
+.receipt-scan-title strong { display:block; font-size:.82rem; color:var(--text-main); }
+.receipt-scan-title span { display:block; margin-top:2px; color:var(--text-muted); font-size:.66rem; line-height:1.4; }
+.receipt-scan-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.receipt-scan-btn { border:1px solid var(--border-color); border-radius:12px; min-height:42px; padding:9px 11px; background:var(--surface); color:var(--text-main); font-weight:800; font-size:.72rem; cursor:pointer; transition:transform .16s ease, border-color .16s ease, background .16s ease; }
+.receipt-scan-btn:hover { border-color:color-mix(in srgb, var(--primary) 48%, var(--border-color)); background:color-mix(in srgb, var(--surface) 92%, var(--primary) 8%); }
+.receipt-scan-btn:active { transform:scale(.975); }
+.receipt-scan-btn i { color:var(--primary); margin-right:6px; }
+.receipt-scan-btn:disabled { opacity:.55; cursor:not-allowed; }
+.receipt-scan-panel { display:none; margin-top:12px; border-top:1px solid var(--border-color); padding-top:12px; }
+.receipt-scan-panel.show { display:block; }
+.receipt-scan-preview { width:100%; max-height:220px; object-fit:contain; border-radius:14px; background:#0B1220; border:1px solid var(--border-color); }
+.receipt-scan-loading { display:flex; align-items:center; gap:10px; padding:12px 2px 2px; color:var(--text-muted); font-size:.72rem; }
+.receipt-scan-loading i { color:var(--primary); }
+.receipt-scan-result { display:none; margin-top:10px; }
+.receipt-scan-result.show { display:block; }
+.receipt-result-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.receipt-result-item { padding:10px; border-radius:12px; background:color-mix(in srgb, var(--bg-main) 76%, transparent); min-width:0; }
+.receipt-result-item.full { grid-column:1 / -1; }
+.receipt-result-item span { display:block; color:var(--text-muted); font-size:.61rem; margin-bottom:3px; }
+.receipt-result-item strong { display:block; color:var(--text-main); font-size:.75rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.receipt-confidence { display:inline-flex; align-items:center; gap:6px; margin-top:10px; border-radius:999px; padding:6px 9px; font-size:.64rem; font-weight:800; }
+.receipt-confidence.good { color:var(--success); background:color-mix(in srgb, var(--success) 13%, transparent); }
+.receipt-confidence.warn { color:#E6A700; background:color-mix(in srgb, #E6A700 13%, transparent); }
+.receipt-confidence.bad { color:var(--danger); background:color-mix(in srgb, var(--danger) 13%, transparent); }
+.receipt-scan-note { margin:9px 0 0; font-size:.64rem; color:var(--text-muted); line-height:1.5; }
+.receipt-duplicate-warning { display:none; margin-top:10px; padding:10px 11px; border-radius:12px; border:1px solid color-mix(in srgb, #E6A700 48%, transparent); background:color-mix(in srgb, #E6A700 10%, transparent); color:var(--text-main); font-size:.67rem; line-height:1.45; }
+.receipt-duplicate-warning.show { display:block; }
+.receipt-duplicate-warning button { margin-top:8px; border:0; border-radius:9px; padding:7px 9px; background:#E6A700; color:#111827; font-size:.64rem; font-weight:900; cursor:pointer; }
+.receipt-source-badge { display:inline-flex; align-items:center; gap:4px; padding:2px 6px; margin-right:5px; border-radius:999px; background:color-mix(in srgb, var(--primary) 12%, transparent); color:var(--primary); font-size:.56rem; font-weight:800; vertical-align:1px; }
+.receipt-scan-error { display:none; margin-top:10px; color:var(--danger); font-size:.68rem; line-height:1.5; }
+.receipt-scan-error.show { display:block; }
+@media (max-width:640px) {
+  .receipt-scan-box { padding:12px; border-radius:16px; }
+  .receipt-scan-actions { grid-template-columns:1fr 1fr; }
+  .receipt-scan-btn { min-height:44px; font-size:.69rem; }
+  .receipt-result-grid { grid-template-columns:1fr 1fr; }
+  .receipt-scan-preview { max-height:190px; }
+}
+
 </style>
 </head>
 <body>
@@ -3501,6 +3553,43 @@
       <div class="type-btn" data-type="transfer" id="t_type_trf">Transfer</div>
       <div class="type-btn" data-type="debt" id="t_type_debt">Utang/Piutang</div>
     </div>
+
+    <div class="receipt-scan-box" id="receipt-scan-box">
+      <div class="receipt-scan-head">
+        <div class="receipt-scan-title">
+          <span class="receipt-scan-icon"><i class="fa-solid fa-receipt"></i></span>
+          <div><strong>Scan Struk</strong><span>Foto atau upload struk. Nominal, merchant, tanggal dan kategori akan diisi otomatis untuk kamu periksa.</span></div>
+        </div>
+      </div>
+      <div class="receipt-scan-actions">
+        <button type="button" class="receipt-scan-btn" id="receipt-camera-btn"><i class="fa-solid fa-camera"></i>Foto Struk</button>
+        <button type="button" class="receipt-scan-btn" id="receipt-gallery-btn"><i class="fa-regular fa-image"></i>Upload Foto</button>
+      </div>
+      <input type="file" id="receipt-camera-input" accept="image/*" capture="environment" hidden>
+      <input type="file" id="receipt-gallery-input" accept="image/*" hidden>
+      <div class="receipt-scan-panel" id="receipt-scan-panel">
+        <img id="receipt-preview" class="receipt-scan-preview" alt="Preview struk">
+        <div class="receipt-scan-loading" id="receipt-scan-loading"><i class="fa-solid fa-spinner fa-spin"></i><span>Membaca struk dan memvalidasi total pembayaran...</span></div>
+        <div class="receipt-scan-error" id="receipt-scan-error"></div>
+        <div class="receipt-scan-result" id="receipt-scan-result">
+          <div class="receipt-result-grid">
+            <div class="receipt-result-item full"><span>Merchant</span><strong id="receipt-result-merchant">-</strong></div>
+            <div class="receipt-result-item"><span>Total dibayar</span><strong id="receipt-result-total">-</strong></div>
+            <div class="receipt-result-item"><span>Kategori</span><strong id="receipt-result-category">-</strong></div>
+            <div class="receipt-result-item"><span>Tanggal</span><strong id="receipt-result-date">-</strong></div>
+            <div class="receipt-result-item"><span>Pembayaran</span><strong id="receipt-result-payment">-</strong></div>
+          </div>
+          <div id="receipt-confidence" class="receipt-confidence warn"><i class="fa-solid fa-shield-halved"></i><span>Confidence -</span></div>
+          <p class="receipt-scan-note" id="receipt-scan-note">Hasil scan sudah dimasukkan ke form. Periksa sebelum menekan Simpan Catatan.</p>
+          <div class="receipt-duplicate-warning" id="receipt-duplicate-warning">
+            <strong><i class="fa-solid fa-triangle-exclamation"></i> Kemungkinan struk sudah pernah dicatat.</strong>
+            <div id="receipt-duplicate-text" style="margin-top:4px;"></div>
+            <button type="button" id="receipt-allow-duplicate-btn">Tetap izinkan disimpan</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <form id="form-tx">
       <input type="hidden" id="tx-id">
       <input type="hidden" id="tx-type" value="expense">
@@ -6046,11 +6135,332 @@ function bindSmartCategory() {
   }
 }
 
+
+// ================= RECEIPT SCANNER V9 =================
+let receiptDraft = null;
+let receiptScanBusy = false;
+const RECEIPT_CATEGORIES = ['Makanan & Minuman','Transportasi','Belanja','Tagihan & Subscription','Hiburan','Kesehatan','Pendidikan','Keluarga','Bisnis','Tabungan & Investasi','Lainnya'];
+
+function inferLearnedReceiptCategory(description) {
+  const normalized = normalizeSmartCategoryText(description);
+  if (!normalized) return '';
+  const learned = {};
+  state.transactions.forEach(tx => {
+    if (tx.type !== 'expense' || !tx.smartCategory) return;
+    const past = normalizeSmartCategoryText(tx.category);
+    if (!past) return;
+    const exact = past === normalized;
+    const related = Math.min(past.length, normalized.length) >= 5 && (past.includes(normalized) || normalized.includes(past));
+    if (exact || related) learned[tx.smartCategory] = (learned[tx.smartCategory] || 0) + (exact ? 4 : 1);
+  });
+  return Object.entries(learned).sort((a,b) => b[1] - a[1])[0]?.[0] || '';
+}
+
+function chooseReceiptCategory(result) {
+  const merchant = safeText(result?.merchant, 100);
+  const learned = inferLearnedReceiptCategory(merchant);
+  if (learned) return learned;
+  const aiCategory = safeText(result?.suggestedCategory, 60);
+  if (RECEIPT_CATEGORIES.includes(aiCategory) && aiCategory !== 'Lainnya') return aiCategory;
+  return inferSmartCategory(merchant) || (RECEIPT_CATEGORIES.includes(aiCategory) ? aiCategory : 'Lainnya');
+}
+
+function isValidReceiptDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false;
+  const d = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return false;
+  const min = new Date('2000-01-01T00:00:00');
+  const max = new Date(); max.setDate(max.getDate() + 1);
+  return d >= min && d <= max;
+}
+
+function normalizeReceiptTime(value) {
+  const m = String(value || '').match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return '';
+  const h = Math.min(23, Math.max(0, Number(m[1])));
+  const min = Math.min(59, Math.max(0, Number(m[2])));
+  return `${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
+}
+
+function buildReceiptFingerprint(meta) {
+  const merchant = normalizeSmartCategoryText(meta?.merchant);
+  const date = safeText(meta?.date, 10);
+  const time = normalizeReceiptTime(meta?.time);
+  const amount = Math.round(Number(meta?.total || meta?.confirmedAmount || 0));
+  if (!merchant || !date || !time || amount <= 0) return '';
+  return `${merchant}|${date}|${time}|${amount}`;
+}
+
+function findReceiptDuplicate(meta, excludeId = '') {
+  if (!meta) return null;
+  const hash = safeText(meta.imageHash, 128);
+  const fingerprint = buildReceiptFingerprint(meta);
+  return state.transactions.find(tx => {
+    if (tx.id === excludeId || !tx.receiptMeta) return false;
+    if (hash && safeText(tx.receiptMeta.imageHash, 128) === hash) return true;
+    return Boolean(fingerprint && buildReceiptFingerprint(tx.receiptMeta) === fingerprint);
+  }) || null;
+}
+
+function receiptConfidenceClass(value) {
+  const score = Math.max(0, Math.min(100, Number(value || 0)));
+  return score >= 90 ? 'good' : score >= 70 ? 'warn' : 'bad';
+}
+
+function setReceiptScanBusy(busy) {
+  receiptScanBusy = busy;
+  ['receipt-camera-btn','receipt-gallery-btn'].forEach(id => { if ($(id)) $(id).disabled = busy; });
+  if ($('receipt-scan-loading')) $('receipt-scan-loading').style.display = busy ? 'flex' : 'none';
+}
+
+function resetReceiptScanner({ hidePanel = true } = {}) {
+  receiptDraft = null;
+  setReceiptScanBusy(false);
+  if ($('receipt-camera-input')) $('receipt-camera-input').value = '';
+  if ($('receipt-gallery-input')) $('receipt-gallery-input').value = '';
+  if ($('receipt-scan-result')) $('receipt-scan-result').classList.remove('show');
+  if ($('receipt-scan-error')) { $('receipt-scan-error').classList.remove('show'); $('receipt-scan-error').textContent = ''; }
+  if ($('receipt-duplicate-warning')) $('receipt-duplicate-warning').classList.remove('show');
+  if ($('receipt-scan-panel')) $('receipt-scan-panel').classList.toggle('show', !hidePanel);
+  if ($('receipt-preview')) $('receipt-preview').removeAttribute('src');
+}
+
+function canvasToBlob(canvas, type = 'image/jpeg', quality = .82) {
+  return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Gagal memproses foto struk.')), type, quality));
+}
+
+async function loadReceiptBitmap(file) {
+  if ('createImageBitmap' in window) {
+    try { return await createImageBitmap(file, { imageOrientation:'from-image' }); } catch (_) {}
+  }
+  return await new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Foto tidak dapat dibaca.')); };
+    img.src = url;
+  });
+}
+
+async function prepareReceiptImage(file) {
+  if (!file || (file.type && !String(file.type).toLowerCase().startsWith('image/'))) throw new Error('Pilih file gambar struk.');
+  if (file.size > 15 * 1024 * 1024) throw new Error('Foto terlalu besar. Maksimal 15 MB sebelum kompresi.');
+
+  const bitmap = await loadReceiptBitmap(file);
+  const sourceW = bitmap.width || bitmap.naturalWidth;
+  const sourceH = bitmap.height || bitmap.naturalHeight;
+  if (!sourceW || !sourceH) throw new Error('Ukuran foto tidak valid.');
+
+  const maxSide = 1600;
+  const initialScale = Math.min(1, maxSide / Math.max(sourceW, sourceH));
+  let width = Math.max(1, Math.round(sourceW * initialScale));
+  let height = Math.max(1, Math.round(sourceH * initialScale));
+  let canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  let ctx = canvas.getContext('2d', { alpha:false });
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,width,height);
+  ctx.filter = 'contrast(1.08) brightness(1.02)';
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  if (typeof bitmap.close === 'function') bitmap.close();
+
+  const targetBytes = 600 * 1024;
+  let quality = .84;
+  let blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+  while (blob.size > targetBytes && quality > .52) {
+    quality -= .07;
+    blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+  }
+  let shrinkCount = 0;
+  while (blob.size > targetBytes && shrinkCount < 2) {
+    shrinkCount += 1;
+    width = Math.max(1, Math.round(canvas.width * .82));
+    height = Math.max(1, Math.round(canvas.height * .82));
+    const next = document.createElement('canvas');
+    next.width = width; next.height = height;
+    const nextCtx = next.getContext('2d', { alpha:false });
+    nextCtx.fillStyle = '#fff'; nextCtx.fillRect(0,0,width,height);
+    nextCtx.drawImage(canvas, 0, 0, width, height);
+    canvas = next;
+    blob = await canvasToBlob(canvas, 'image/jpeg', .58);
+  }
+
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Gagal membaca foto.'));
+    reader.readAsDataURL(blob);
+  });
+
+  let imageHash = '';
+  try {
+    if (crypto?.subtle) {
+      const digest = await crypto.subtle.digest('SHA-256', await blob.arrayBuffer());
+      imageHash = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }
+  } catch (_) {}
+
+  return { dataUrl, imageHash, width:canvas.width, height:canvas.height, bytes:blob.size };
+}
+
+function suggestReceiptAccount(paymentMethod) {
+  const payment = normalizeSmartCategoryText(paymentMethod);
+  if (!payment || /^(qris|cash|tunai|debit|credit|kartu)$/.test(payment)) return '';
+  const candidates = state.accounts.filter(acc => {
+    const name = normalizeSmartCategoryText(acc.name);
+    return name && (payment.includes(name) || name.includes(payment));
+  });
+  return candidates.length === 1 ? candidates[0].id : '';
+}
+
+function showReceiptDuplicateWarning(duplicate) {
+  const box = $('receipt-duplicate-warning');
+  if (!box) return;
+  const merchant = duplicate.receiptMeta?.merchant || duplicate.category || 'Transaksi';
+  $('receipt-duplicate-text').textContent = `${merchant} • ${duplicate.date} • ${toRp(duplicate.amount)}`;
+  box.classList.add('show');
+}
+
+function renderReceiptScanResult(result) {
+  const merchant = safeText(result.merchant, 100) || 'Merchant tidak terbaca';
+  const category = chooseReceiptCategory(result);
+  const total = Math.max(0, Number(result.total || 0));
+  const confidence = Math.max(0, Math.min(100, Number(result.confidence?.overall || result.confidenceOverall || 0)));
+  $('receipt-result-merchant').textContent = merchant;
+  $('receipt-result-total').textContent = total > 0 ? toRp(total) : 'Perlu dicek';
+  $('receipt-result-category').textContent = category;
+  $('receipt-result-date').textContent = isValidReceiptDate(result.date) ? result.date : 'Hari ini';
+  $('receipt-result-payment').textContent = safeText(result.paymentMethod, 80) || 'Tidak terbaca';
+  const badge = $('receipt-confidence');
+  badge.className = `receipt-confidence ${receiptConfidenceClass(confidence)}`;
+  badge.innerHTML = `<i class="fa-solid fa-shield-halved"></i><span>Confidence ${Math.round(confidence)}%</span>`;
+  const warnings = Array.isArray(result.warnings) ? result.warnings.filter(Boolean).slice(0,3) : [];
+  $('receipt-scan-note').textContent = warnings.length
+    ? `Periksa sebelum simpan: ${warnings.join(' • ')}`
+    : 'Hasil scan sudah dimasukkan ke form. Periksa nominal, kategori, tanggal dan dompet sebelum menekan Simpan Catatan.';
+  $('receipt-scan-result').classList.add('show');
+}
+
+async function requestReceiptScan(dataUrl) {
+  const pinKey = 'KITA_TABUNG_RECEIPT_PIN';
+  let pin = localStorage.getItem(pinKey) || localStorage.getItem('KITA_TABUNG_AI_PIN') || '';
+  const makeRequest = () => fetch('/api/receipt-scan', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', Accept:'application/json', ...(pin ? {'X-RECEIPT-PIN':pin} : {}) },
+    body:JSON.stringify({ imageData:dataUrl })
+  });
+
+  let response = await makeRequest();
+  if (response.status === 401) {
+    pin = safeText(prompt('Masukkan PIN Scan Struk yang diatur di Vercel:') || '', 80);
+    if (!pin) throw new Error('PIN Scan Struk diperlukan.');
+    localStorage.setItem(pinKey, pin);
+    response = await makeRequest();
+    if (response.status === 401) localStorage.removeItem(pinKey);
+  }
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || `Scan struk gagal (${response.status}).`);
+  return result;
+}
+
+async function scanReceiptFile(file) {
+  if (receiptScanBusy || !file) return;
+  resetReceiptScanner({ hidePanel:false });
+  $('receipt-scan-panel').classList.add('show');
+  setReceiptScanBusy(true);
+  try {
+    const prepared = await prepareReceiptImage(file);
+    $('receipt-preview').src = prepared.dataUrl;
+    const result = await requestReceiptScan(prepared.dataUrl);
+    if (!Number.isFinite(Number(result.total)) || Number(result.total) <= 0) throw new Error('Nominal total belum terbaca dengan yakin. Ambil foto yang lebih terang dan pastikan bagian TOTAL terlihat.');
+
+    const merchant = safeText(result.merchant, 100) || 'Struk Belanja';
+    const category = chooseReceiptCategory(result);
+    receiptDraft = {
+      merchant,
+      date: isValidReceiptDate(result.date) ? result.date : new Date().toISOString().split('T')[0],
+      time: normalizeReceiptTime(result.time),
+      total: Math.round(Number(result.total || 0)),
+      subtotal: Math.max(0, Math.round(Number(result.subtotal || 0))),
+      discount: Math.max(0, Math.round(Number(result.discount || 0))),
+      tax: Math.max(0, Math.round(Number(result.tax || 0))),
+      serviceCharge: Math.max(0, Math.round(Number(result.serviceCharge || 0))),
+      paymentMethod: safeText(result.paymentMethod, 80),
+      suggestedCategory: category,
+      confidence: result.confidence && typeof result.confidence === 'object' ? result.confidence : { overall:Number(result.confidenceOverall || 0) },
+      warnings: Array.isArray(result.warnings) ? result.warnings.slice(0,5).map(x => safeText(x, 140)) : [],
+      items: Array.isArray(result.items) ? result.items.slice(0,12).map(item => ({ name:safeText(item?.name, 80), qty:Math.max(0,Number(item?.qty || 0)), total:Math.max(0,Math.round(Number(item?.total || 0))) })) : [],
+      imageHash: prepared.imageHash,
+      scannedAt: Date.now(),
+      allowDuplicate: false
+    };
+    receiptDraft.fingerprint = buildReceiptFingerprint(receiptDraft);
+
+    updateTxType('expense');
+    $('tx-amount').value = receiptDraft.total;
+    $('tx-cat').value = merchant;
+    if ($('tx-smart-category')) $('tx-smart-category').value = category;
+    $('tx-date').value = receiptDraft.date;
+    const suggestedAccount = suggestReceiptAccount(receiptDraft.paymentMethod);
+    if (suggestedAccount && $('tx-acc')) $('tx-acc').value = suggestedAccount;
+    updateSmartCategoryHint();
+
+    renderReceiptScanResult({ ...result, merchant, suggestedCategory:category, total:receiptDraft.total, date:receiptDraft.date });
+    const duplicate = findReceiptDuplicate(receiptDraft, $('tx-id')?.value || '');
+    if (duplicate) showReceiptDuplicateWarning(duplicate);
+    showToast('Struk terbaca. Hasil sudah dimasukkan ke form untuk diperiksa.');
+  } catch (error) {
+    receiptDraft = null;
+    $('receipt-scan-result')?.classList.remove('show');
+    const errorEl = $('receipt-scan-error');
+    if (errorEl) { errorEl.textContent = error.message || 'Struk gagal dibaca.'; errorEl.classList.add('show'); }
+    showToast(error.message || 'Struk gagal dibaca.', true);
+  } finally {
+    setReceiptScanBusy(false);
+    if ($('receipt-camera-input')) $('receipt-camera-input').value = '';
+    if ($('receipt-gallery-input')) $('receipt-gallery-input').value = '';
+  }
+}
+
+function bindReceiptScanner() {
+  const cameraBtn = $('receipt-camera-btn');
+  const galleryBtn = $('receipt-gallery-btn');
+  const cameraInput = $('receipt-camera-input');
+  const galleryInput = $('receipt-gallery-input');
+  const allowDuplicate = $('receipt-allow-duplicate-btn');
+  if (cameraBtn && cameraBtn.dataset.bound !== '1') {
+    cameraBtn.dataset.bound = '1';
+    cameraBtn.addEventListener('click', () => cameraInput?.click());
+  }
+  if (galleryBtn && galleryBtn.dataset.bound !== '1') {
+    galleryBtn.dataset.bound = '1';
+    galleryBtn.addEventListener('click', () => galleryInput?.click());
+  }
+  if (cameraInput && cameraInput.dataset.bound !== '1') {
+    cameraInput.dataset.bound = '1';
+    cameraInput.addEventListener('change', event => scanReceiptFile(event.target.files?.[0]));
+  }
+  if (galleryInput && galleryInput.dataset.bound !== '1') {
+    galleryInput.dataset.bound = '1';
+    galleryInput.addEventListener('change', event => scanReceiptFile(event.target.files?.[0]));
+  }
+  if (allowDuplicate && allowDuplicate.dataset.bound !== '1') {
+    allowDuplicate.dataset.bound = '1';
+    allowDuplicate.addEventListener('click', () => {
+      if (!receiptDraft) return;
+      receiptDraft.allowDuplicate = true;
+      $('receipt-duplicate-warning')?.classList.remove('show');
+      showToast('Duplikat diizinkan. Pastikan transaksi memang berbeda.');
+    });
+  }
+}
+
+
 // ================= MODAL HANDLERS =================
 function openModal(id) { if ($(id)) $(id).style.display = 'flex'; }
 function closeModal(id) { if (id === 'modal-login' && !activeUserId) return; if ($(id)) $(id).style.display = 'none'; }
 
 function openTxModal(id = null) {
+  resetReceiptScanner({ hidePanel: true });
   $('form-tx').reset(); $('tx-id').value = '';
   if ($('tx-smart-category')) $('tx-smart-category').value = '';
   updateTxType('expense');
@@ -6075,6 +6485,9 @@ function openTxModal(id = null) {
 
 function updateTxType(type) {
   $('tx-type').value = type;
+  const receiptBox = $('receipt-scan-box');
+  if (receiptBox) receiptBox.style.display = type === 'expense' ? 'block' : 'none';
+  if (type !== 'expense' && receiptDraft) resetReceiptScanner({ hidePanel:true });
   document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
   const activeBtn = document.querySelector(`.type-btn[data-type="${type}"]`);
   if (activeBtn) activeBtn.classList.add('active');
@@ -6394,16 +6807,49 @@ $('form-tx').addEventListener('submit', (e) => {
   if (type === 'transfer' && !accountToId) return alert(state.lang === 'en' ? 'Please select destination account!' : 'Pilih rekening tujuan terlebih dahulu!');
   if (type === 'transfer' && accountId === accountToId) return alert(t('alert_trf'));
 
-  const txData = { id: id || generateId(), type, amount, category, smartCategory, accountId, date, budgetId, accountToId };
+  const oldTx = id ? state.transactions.find(t => t.id === id) : null;
+  if (id && !oldTx) return alert('Transaksi tidak ditemukan.');
+
+  let receiptMeta = oldTx?.receiptMeta || null;
+  if (receiptDraft) {
+    const duplicate = findReceiptDuplicate(receiptDraft, id);
+    if (duplicate && !receiptDraft.allowDuplicate) {
+      showReceiptDuplicateWarning(duplicate);
+      showToast('Struk ini kemungkinan sudah pernah dicatat. Periksa peringatan sebelum menyimpan.', true);
+      return;
+    }
+    receiptMeta = {
+      merchant: safeText(receiptDraft.merchant, 100),
+      date: safeText(receiptDraft.date, 10),
+      time: normalizeReceiptTime(receiptDraft.time),
+      total: Math.max(0, Math.round(Number(receiptDraft.total || 0))),
+      subtotal: Math.max(0, Math.round(Number(receiptDraft.subtotal || 0))),
+      discount: Math.max(0, Math.round(Number(receiptDraft.discount || 0))),
+      tax: Math.max(0, Math.round(Number(receiptDraft.tax || 0))),
+      serviceCharge: Math.max(0, Math.round(Number(receiptDraft.serviceCharge || 0))),
+      paymentMethod: safeText(receiptDraft.paymentMethod, 80),
+      suggestedCategory: safeText(receiptDraft.suggestedCategory, 60),
+      confidence: receiptDraft.confidence || {},
+      warnings: Array.isArray(receiptDraft.warnings) ? receiptDraft.warnings.slice(0,5) : [],
+      items: Array.isArray(receiptDraft.items) ? receiptDraft.items.slice(0,12) : [],
+      imageHash: safeText(receiptDraft.imageHash, 128),
+      fingerprint: safeText(receiptDraft.fingerprint, 240),
+      scannedAt: Number(receiptDraft.scannedAt || Date.now()),
+      confirmedAmount: amount,
+      confirmedCategory: smartCategory
+    };
+  }
+
+  const txData = { id: id || generateId(), type, amount, category, smartCategory, accountId, date, budgetId, accountToId, ...(receiptMeta ? { receiptMeta } : {}) };
 
   if (id) {
-    const oldTx = state.transactions.find(t => t.id === id);
-    if (!oldTx) return alert('Transaksi tidak ditemukan.');
     revertBalance(oldTx);
     const idx = state.transactions.findIndex(t => t.id === id); state.transactions[idx] = txData;
   } else { state.transactions.push(txData); }
 
   applyBalance(txData); saveData(); render(); closeModal('modal-tx');
+  if (receiptMeta) showToast('Transaksi dari struk berhasil disimpan.');
+  resetReceiptScanner({ hidePanel:true });
 });
 
 function applyBalance(tx) {
@@ -6635,9 +7081,10 @@ function renderHome() {
         subText = `Ke: ${toAccount ? toAccount.name : '?'} • ${item.date}`;
       }
       const amountColor = item.type === 'income' ? 'var(--success)' : item.type === 'expense' || item.type === 'debt' ? 'var(--danger)' : 'var(--text-main)';
+      const receiptBadge = item.receiptMeta ? '<span class="receipt-source-badge"><i class="fa-solid fa-receipt"></i> Struk</span>' : '';
       txHtml += `<div class="tx-item" onclick="openTxModal('${item.id}')">
         <div class="tx-icon ${icon.cls}"><i class="fa-solid ${icon.icon}"></i></div>
-        <div class="tx-details"><div class="tx-title">${escapeHtml(category || item.category || '-')}</div><div class="tx-sub">${escapeHtml(subText)}</div></div>
+        <div class="tx-details"><div class="tx-title">${escapeHtml(category || item.category || '-')}</div><div class="tx-sub">${receiptBadge}${escapeHtml(subText)}</div></div>
         <div class="tx-amount" style="color:${amountColor}">${icon.sign}${toRp(item.amount)}</div>
       </div>`;
     });
@@ -6799,8 +7246,9 @@ function renderHistory() {
   else {
     txs.forEach(t => {
       const icn = getIconData(t.type); const acc = state.accounts.find(a => a.id === t.accountId);
+      const receiptBadge = t.receiptMeta ? '<span class="receipt-source-badge"><i class="fa-solid fa-receipt"></i> Struk</span>' : '';
       html += `<div class="tx-item"><div class="tx-icon ${icn.cls}"><i class="fa-solid ${icn.icon}"></i></div>
-          <div class="tx-details"><div class="tx-title">${escapeHtml(t.category)}</div><div class="tx-sub">${t.smartCategory ? `<span class=\"smart-category-badge\">${escapeHtml(t.smartCategory)}</span>` : ''}${t.date} • ${escapeHtml(acc ? acc.name : '?')}</div></div>
+          <div class="tx-details"><div class="tx-title">${escapeHtml(t.category)}</div><div class="tx-sub">${receiptBadge}${t.smartCategory ? `<span class=\"smart-category-badge\">${escapeHtml(t.smartCategory)}</span>` : ''}${t.date} • ${escapeHtml(acc ? acc.name : '?')}</div></div>
           <div style="text-align:right;"><div class="tx-amount" style="color: ${t.type === 'income' ? 'var(--success)' : 'var(--text-main)'}">${icn.sign}${toRp(t.amount)}</div>
             <div style="margin-top:5px;"><button onclick="openTxModal('${t.id}')" style="background:none; border:none; color:var(--primary); cursor:pointer; margin-right:10px;"><i class="fa-solid fa-pen"></i></button>
               <button onclick="deleteTx('${t.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
@@ -7549,6 +7997,7 @@ $('ai-chat-form').addEventListener('submit', (event) => {
 window.onload = async () => {
   bindTransactionTypeButtons();
   bindSmartCategory();
+  bindReceiptScanner();
   initPWA();
   bindThemePreviewControls();
   bindInteractiveEffects();
