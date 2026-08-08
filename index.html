@@ -3997,13 +3997,38 @@
   </div>
 </div>
 
+<!-- Email OTP Verification Modal -->
+<div class="modal-overlay" id="modal-auth-otp">
+  <div class="modal-content" style="max-width:460px;">
+    <div class="modal-header">
+      <h2 id="auth-otp-title">Verifikasi Kode Email</h2>
+      <button class="close-btn" type="button" onclick="closeAuthOtpModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p id="auth-otp-description" class="text-muted" style="margin:-4px 0 14px; line-height:1.6;">Masukkan kode yang dikirim ke email kamu.</p>
+    <div style="padding:10px 12px; margin-bottom:14px; border-radius:12px; background:var(--bg); border:1px solid var(--border-color);">
+      <div style="font-size:.7rem; color:var(--text-muted); margin-bottom:3px;">Dikirim ke</div>
+      <div id="auth-otp-email" style="font-weight:800; overflow-wrap:anywhere;">-</div>
+    </div>
+    <form id="form-auth-otp">
+      <div class="form-group">
+        <label class="form-label" for="auth-otp-code">Kode verifikasi</label>
+        <input type="text" id="auth-otp-code" class="form-control" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Masukkan kode dari email" required>
+      </div>
+      <p id="auth-otp-message" class="auth-message" aria-live="polite" style="margin:0 0 12px;"></p>
+      <button type="submit" id="auth-otp-submit" class="btn-submit">Verifikasi Kode</button>
+      <button type="button" id="auth-otp-resend" class="btn-secondary" style="width:100%; margin-top:10px;" onclick="resendEmailOtp()">Kirim Ulang Kode</button>
+    </form>
+    <p style="font-size:.72rem; color:var(--text-muted); text-align:center; margin:14px 0 0; line-height:1.55;">Tidak perlu membuka tautan apa pun dari email. Salin kode lalu masukkan di halaman ini.</p>
+  </div>
+</div>
+
 <!-- Password Recovery Modal -->
 <div class="modal-overlay" id="modal-password-recovery">
   <div class="modal-content" style="max-width:460px;">
     <div class="modal-header">
       <h2>Buat Password Baru</h2>
     </div>
-    <p class="text-muted" style="margin:-4px 0 18px;">Link reset sudah diverifikasi. Masukkan password baru untuk akun KITA TABUNG.</p>
+    <p class="text-muted" style="margin:-4px 0 18px;">Kode reset sudah diverifikasi. Masukkan password baru untuk akun KITA TABUNG.</p>
     <form id="form-password-recovery">
       <div class="form-group">
         <label class="form-label" for="recovery-password">Password baru</label>
@@ -4080,7 +4105,7 @@
 const SUPABASE_URL = 'https://xmodzjfhsrqgunrkrwbp.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_CzFv_8l_3Dl9zYh0axf6yA_gssPk3AR';
 const AUTH_REDIRECT_URL = 'https://www.kitabung.online/';
-// Email templates V9.2 use direct token_hash links to this domain, then verifyOtp() below.
+// Email templates V9.3 supports OTP-first email verification and recovery; direct token_hash remains as fallback to this domain, then verifyOtp() below.
 
 const LEGACY_STORAGE_KEY = 'GENZ_MONEY_DATA_V2';
 const LEGACY_OWNER_KEY = 'KITA_TABUNG_LEGACY_OWNER';
@@ -4094,6 +4119,9 @@ let cloudReady = false;
 let cloudSyncTimer = null;
 let cloudSyncRunning = false;
 let cloudLastSavedAt = null;
+
+// V9.3: email OTP flow avoids mobile email-link redirects entirely.
+let pendingEmailOtp = { flow: null, email: '', displayName: '', emoji: '' };
 
 function isSupabaseConfigured() {
   return /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SUPABASE_URL) &&
@@ -7771,15 +7799,15 @@ async function registerUser(email, password) {
   if (error) throw error;
 
   if (!data.session) {
-    showAuthMessage('Akun dibuat. Periksa email dan klik tautan konfirmasi, lalu kembali untuk login.');
-    setAuthMode('login', false);
+    pendingEmailOtp = { flow: 'signup', email, displayName, emoji };
+    showAuthMessage('Kode verifikasi sudah dikirim ke email. Masukkan kode tersebut untuk mengaktifkan akun.');
+    openAuthOtpModal('signup', email);
     return;
   }
 
   state.user = { name: displayName, emoji };
   await handleAuthenticatedUser(data.user);
 }
-
 async function loginUser(email, password) {
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if (error) throw error;
@@ -7796,7 +7824,9 @@ async function sendPasswordReset() {
       redirectTo: AUTH_REDIRECT_URL
     });
     if (error) throw error;
-    showAuthMessage('Tautan reset password sudah dikirim ke email.');
+    pendingEmailOtp = { flow: 'recovery', email, displayName: '', emoji: '' };
+    showAuthMessage('Kode reset password sudah dikirim ke email.');
+    openAuthOtpModal('recovery', email);
   } catch (error) {
     showAuthMessage(error.message, true);
   } finally {
@@ -7804,6 +7834,107 @@ async function sendPasswordReset() {
   }
 }
 
+function setAuthOtpMessage(message = '', isError = false) {
+  const el = $('auth-otp-message');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.toggle('error', !!isError);
+  el.style.color = isError ? 'var(--danger)' : 'var(--text-muted)';
+}
+
+function openAuthOtpModal(flow, email) {
+  pendingEmailOtp.flow = flow;
+  pendingEmailOtp.email = email || pendingEmailOtp.email || '';
+  const isRecovery = flow === 'recovery';
+  if ($('auth-otp-title')) $('auth-otp-title').textContent = isRecovery ? 'Kode Reset Password' : 'Verifikasi Email';
+  if ($('auth-otp-description')) $('auth-otp-description').textContent = isRecovery
+    ? 'Kami mengirim kode reset ke email kamu. Salin kodenya di sini untuk membuat password baru.'
+    : 'Kami mengirim kode verifikasi ke email kamu. Salin kodenya di sini untuk mengaktifkan akun.';
+  if ($('auth-otp-email')) $('auth-otp-email').textContent = pendingEmailOtp.email || '-';
+  if ($('auth-otp-code')) $('auth-otp-code').value = '';
+  setAuthOtpMessage('');
+  openModal('modal-auth-otp');
+  setTimeout(() => $('auth-otp-code')?.focus(), 120);
+}
+
+function closeAuthOtpModal() {
+  closeModal('modal-auth-otp');
+  setAuthOtpMessage('');
+}
+
+async function verifyEmailOtp(event) {
+  event?.preventDefault?.();
+  if (!supabaseClient) return;
+  const email = pendingEmailOtp.email;
+  const flow = pendingEmailOtp.flow;
+  const token = String($('auth-otp-code')?.value || '').replace(/\D/g, '').slice(0, 8);
+  if (!email || !flow) return setAuthOtpMessage('Sesi verifikasi tidak ditemukan. Kirim kode baru.', true);
+  if (token.length < 6) return setAuthOtpMessage('Masukkan kode verifikasi dari email.', true);
+
+  const btn = $('auth-otp-submit');
+  if (btn) { btn.disabled = true; btn.textContent = 'Memverifikasi...'; }
+  setAuthOtpMessage('');
+  try {
+    const verifyType = flow === 'recovery' ? 'recovery' : 'email';
+    const { data, error } = await supabaseClient.auth.verifyOtp({
+      email,
+      token,
+      type: verifyType
+    });
+    if (error) throw error;
+
+    closeModal('modal-auth-otp');
+
+    if (flow === 'recovery') {
+      pendingEmailOtp = { flow: null, email: '', displayName: '', emoji: '' };
+      openPasswordRecoveryModal();
+      return;
+    }
+
+    if (data?.user) {
+      state.user = {
+        name: pendingEmailOtp.displayName || data.user.user_metadata?.display_name || 'Bestie',
+        emoji: pendingEmailOtp.emoji || data.user.user_metadata?.emoji || '💸'
+      };
+      await handleAuthenticatedUser(data.user);
+    }
+    pendingEmailOtp = { flow: null, email: '', displayName: '', emoji: '' };
+    showToast('Email berhasil diverifikasi. Akun KITA TABUNG sudah aktif.');
+  } catch (error) {
+    setAuthOtpMessage(error?.message || 'Kode salah atau sudah kedaluwarsa. Kirim kode baru lalu coba lagi.', true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Verifikasi Kode'; }
+  }
+}
+
+async function resendEmailOtp() {
+  if (!supabaseClient || !pendingEmailOtp.email || !pendingEmailOtp.flow) {
+    return setAuthOtpMessage('Sesi verifikasi tidak ditemukan.', true);
+  }
+  const btn = $('auth-otp-resend');
+  if (btn) { btn.disabled = true; btn.textContent = 'Mengirim...'; }
+  setAuthOtpMessage('');
+  try {
+    let error = null;
+    if (pendingEmailOtp.flow === 'signup') {
+      ({ error } = await supabaseClient.auth.resend({
+        type: 'signup',
+        email: pendingEmailOtp.email,
+        options: { emailRedirectTo: AUTH_REDIRECT_URL }
+      }));
+    } else {
+      ({ error } = await supabaseClient.auth.resetPasswordForEmail(pendingEmailOtp.email, {
+        redirectTo: AUTH_REDIRECT_URL
+      }));
+    }
+    if (error) throw error;
+    setAuthOtpMessage('Kode baru sudah dikirim. Periksa inbox atau folder spam.');
+  } catch (error) {
+    setAuthOtpMessage(error?.message || 'Gagal mengirim ulang kode.', true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Kirim Ulang Kode'; }
+  }
+}
 function cleanAuthTokenFromUrl() {
   try {
     const url = new URL(window.location.href);
@@ -8108,6 +8239,8 @@ $('ai-chat-form').addEventListener('submit', (event) => {
 });
 
 $('form-password-recovery')?.addEventListener('submit', saveRecoveredPassword);
+$('form-auth-otp')?.addEventListener('submit', verifyEmailOtp);
+$('auth-otp-code')?.addEventListener('input', event => { event.target.value = event.target.value.replace(/\D/g, '').slice(0, 8); });
 
 // ================= INIT =================
 window.onload = async () => {
