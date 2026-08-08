@@ -3997,6 +3997,28 @@
   </div>
 </div>
 
+<!-- Password Recovery Modal -->
+<div class="modal-overlay" id="modal-password-recovery">
+  <div class="modal-content" style="max-width:460px;">
+    <div class="modal-header">
+      <h2>Buat Password Baru</h2>
+    </div>
+    <p class="text-muted" style="margin:-4px 0 18px;">Link reset sudah diverifikasi. Masukkan password baru untuk akun KITA TABUNG.</p>
+    <form id="form-password-recovery">
+      <div class="form-group">
+        <label class="form-label" for="recovery-password">Password baru</label>
+        <input type="password" id="recovery-password" class="form-control" minlength="8" maxlength="128" autocomplete="new-password" placeholder="Minimal 8 karakter" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="recovery-password-confirm">Ulangi password baru</label>
+        <input type="password" id="recovery-password-confirm" class="form-control" minlength="8" maxlength="128" autocomplete="new-password" placeholder="Ketik ulang password" required>
+      </div>
+      <p id="recovery-password-message" class="auth-message" aria-live="polite" style="margin:0 0 12px;"></p>
+      <button type="submit" id="recovery-password-submit" class="btn-submit">Simpan Password Baru</button>
+    </form>
+  </div>
+</div>
+
 <!-- Profile Modal -->
 <div class="modal-overlay" id="modal-profile">
   <div class="modal-content">
@@ -4058,6 +4080,7 @@
 const SUPABASE_URL = 'https://xmodzjfhsrqgunrkrwbp.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_CzFv_8l_3Dl9zYh0axf6yA_gssPk3AR';
 const AUTH_REDIRECT_URL = 'https://www.kitabung.online/';
+// Email templates V9.2 use direct token_hash links to this domain, then verifyOtp() below.
 
 const LEGACY_STORAGE_KEY = 'GENZ_MONEY_DATA_V2';
 const LEGACY_OWNER_KEY = 'KITA_TABUNG_LEGACY_OWNER';
@@ -7781,6 +7804,96 @@ async function sendPasswordReset() {
   }
 }
 
+function cleanAuthTokenFromUrl() {
+  try {
+    const url = new URL(window.location.href);
+    ['token_hash','type','auth_action'].forEach(key => url.searchParams.delete(key));
+    const clean = url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : '') + url.hash;
+    window.history.replaceState({}, document.title, clean);
+  } catch (_) {}
+}
+
+function setRecoveryPasswordMessage(message = '', isError = false) {
+  const el = $('recovery-password-message');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.toggle('error', !!isError);
+}
+
+function openPasswordRecoveryModal() {
+  if ($('modal-login')) $('modal-login').style.display = 'none';
+  if ($('recovery-password')) $('recovery-password').value = '';
+  if ($('recovery-password-confirm')) $('recovery-password-confirm').value = '';
+  setRecoveryPasswordMessage('');
+  openModal('modal-password-recovery');
+  setTimeout(() => $('recovery-password')?.focus(), 120);
+}
+
+async function handleDirectAuthToken() {
+  if (!supabaseClient) return { handled: false };
+  const params = new URLSearchParams(window.location.search);
+  const tokenHash = params.get('token_hash');
+  const rawType = (params.get('type') || '').toLowerCase();
+  if (!tokenHash || !rawType) return { handled: false };
+
+  const verifyType = rawType === 'signup' ? 'email' : rawType;
+  if (!['email', 'recovery', 'invite', 'email_change'].includes(verifyType)) {
+    cleanAuthTokenFromUrl();
+    return { handled: true, error: new Error('Tipe tautan autentikasi tidak dikenali.') };
+  }
+
+  try {
+    const { data, error } = await supabaseClient.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: verifyType
+    });
+    if (error) throw error;
+    cleanAuthTokenFromUrl();
+
+    if (data?.user) {
+      await hydrateUserFinanceData(data.user);
+    }
+
+    if (verifyType === 'recovery') {
+      openPasswordRecoveryModal();
+      return { handled: true, recovery: true, user: data?.user || null };
+    }
+
+    showToast('Email berhasil diverifikasi.');
+    return { handled: true, verified: true, user: data?.user || null };
+  } catch (error) {
+    cleanAuthTokenFromUrl();
+    console.error('Verifikasi link email gagal:', error);
+    return { handled: true, error };
+  }
+}
+
+async function saveRecoveredPassword(event) {
+  event?.preventDefault?.();
+  if (!supabaseClient) return;
+  const password = $('recovery-password')?.value || '';
+  const confirmPassword = $('recovery-password-confirm')?.value || '';
+  if (password.length < 8) return setRecoveryPasswordMessage('Password minimal 8 karakter.', true);
+  if (password !== confirmPassword) return setRecoveryPasswordMessage('Konfirmasi password tidak sama.', true);
+
+  const btn = $('recovery-password-submit');
+  if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+  setRecoveryPasswordMessage('');
+  try {
+    const { error } = await supabaseClient.auth.updateUser({ password });
+    if (error) throw error;
+    closeModal('modal-password-recovery');
+    showToast('Password berhasil diperbarui. Silakan gunakan password baru.');
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user && !activeUserId) await hydrateUserFinanceData(user);
+    render();
+  } catch (error) {
+    setRecoveryPasswordMessage(error.message || 'Password gagal diperbarui.', true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Simpan Password Baru'; }
+  }
+}
+
 function positionProfileMenu() {
   const panel = $('profile-menu-panel');
   const trigger = $('profile-pic');
@@ -7994,6 +8107,8 @@ $('ai-chat-form').addEventListener('submit', (event) => {
   sendAIMessage(message);
 });
 
+$('form-password-recovery')?.addEventListener('submit', saveRecoveredPassword);
+
 // ================= INIT =================
 window.onload = async () => {
   bindTransactionTypeButtons();
@@ -8007,6 +8122,11 @@ window.onload = async () => {
   preventPullToRefresh();
   checkAIConnection();
   initializeSupabaseClient();
+
+  let directAuthResult = { handled: false };
+  if (supabaseClient) {
+    directAuthResult = await handleDirectAuthToken();
+  }
 
   if (!supabaseClient) {
     loadData();
@@ -8026,13 +8146,19 @@ window.onload = async () => {
     if (error) console.error('Session Supabase gagal:', error);
 
     if (session?.user) {
-      await hydrateUserFinanceData(session.user);
+      if (!activeUserId) await hydrateUserFinanceData(session.user);
       if ($('setting-account-email')) $('setting-account-email').textContent = activeUserEmail || '-';
     } else {
       loadData();
       updateCloudStatus('auth');
       setAuthMode('login');
+      if (!directAuthResult.recovery) openModal('modal-login');
+    }
+
+    if (directAuthResult.error) {
+      setAuthMode('login', false);
       openModal('modal-login');
+      showAuthMessage('Link verifikasi/reset tidak valid atau sudah kedaluwarsa. Minta email baru lalu coba lagi.', true);
     }
 
     applyTheme();
@@ -8053,14 +8179,7 @@ window.onload = async () => {
         activeUserId = sessionNow.user.id;
       }
       if (event === 'PASSWORD_RECOVERY') {
-        const nextPassword = prompt('Masukkan password baru minimal 8 karakter:');
-        if (nextPassword && nextPassword.length >= 8) {
-          supabaseClient.auth.updateUser({ password: nextPassword })
-            .then(({ error: updateError }) => {
-              if (updateError) showToast(updateError.message, true);
-              else showToast('Password berhasil diperbarui.');
-            });
-        }
+        openPasswordRecoveryModal();
       }
     });
   }
