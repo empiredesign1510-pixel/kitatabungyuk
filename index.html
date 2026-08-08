@@ -210,7 +210,7 @@
       transition: background 0.3s;
       max-height: 90vh; overflow-y: auto;
     }
-    /* V9.4 — auth OTP must sit above the full-screen login overlay (z-index 500). */
+    /* V10.0 — auth OTP must sit above the full-screen login overlay (z-index 500). */
     #modal-auth-otp, #modal-password-recovery { z-index: 760; }
     #modal-auth-otp .modal-content, #modal-password-recovery .modal-content { box-shadow: 0 30px 80px -28px rgba(0,0,0,.65); }
     .auth-pending-otp {
@@ -2993,7 +2993,38 @@
   .receipt-scan-preview { max-height:190px; }
 }
 
-</style>
+
+
+    /* V10 — Safety & Privacy */
+    .safety-privacy-card { display:grid; gap:0; }
+    .safety-row { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0; }
+    .safety-row + .safety-row { border-top:1px solid var(--border-color); }
+    .safety-row-main { display:flex; align-items:flex-start; gap:11px; min-width:0; }
+    .safety-icon { width:34px; height:34px; border-radius:11px; display:grid; place-items:center; flex:0 0 auto; background:var(--primary-soft); color:var(--primary); }
+    .safety-title { font-weight:800; color:var(--text-main); font-size:.82rem; }
+    .safety-sub { color:var(--text-muted); font-size:.7rem; line-height:1.5; margin-top:3px; }
+    .safety-select { width:min(210px,48vw); padding:9px 10px; font-size:.74rem; }
+    .backup-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+    .backup-actions .btn-secondary { width:100%; margin:0; }
+    .backup-status { margin-top:10px; color:var(--text-muted); font-size:.68rem; line-height:1.45; }
+    .restore-summary { display:grid; gap:9px; margin:14px 0 18px; }
+    .restore-summary-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg); font-size:.76rem; }
+    .restore-summary-row strong { color:var(--text-main); }
+    .restore-warning { padding:12px 13px; border-radius:13px; background:var(--warning-soft); color:color-mix(in srgb,var(--warning) 72%, var(--text-main)); font-size:.72rem; line-height:1.55; border:1px solid color-mix(in srgb,var(--warning) 34%, transparent); }
+    .modern-toast.has-action { grid-template-columns:38px minmax(0,1fr) auto 30px; }
+    .modern-toast-action { border:0; background:transparent; color:var(--primary); font-weight:900; font-size:.72rem; padding:8px 7px; border-radius:10px; cursor:pointer; white-space:nowrap; }
+    .modern-toast-action:hover { background:var(--primary-soft); }
+    .privacy-on-indicator { display:inline-flex; align-items:center; gap:5px; margin-left:7px; padding:3px 7px; border-radius:999px; background:rgba(255,255,255,.16); font-size:.58rem; font-weight:800; vertical-align:middle; }
+    @media (max-width: 520px) {
+      .safety-row { align-items:flex-start; }
+      .safety-row.control-row { flex-direction:column; }
+      .safety-row.control-row .safety-select { width:100%; }
+      .backup-actions { grid-template-columns:1fr; }
+      .modern-toast.has-action { grid-template-columns:34px minmax(0,1fr) auto; }
+      .modern-toast.has-action .modern-toast-close { display:none; }
+    }
+
+  </style>
 </head>
 <body>
 
@@ -3455,6 +3486,63 @@
           </div>
         </div>
 
+
+        <!-- V10 Safety & Privacy -->
+        <div class="bento-card safety-privacy-card" id="safety-privacy-card">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:2px;">
+            <div>
+              <h4 style="margin-bottom:5px;">Data & Privasi</h4>
+              <p style="font-size:.74rem;color:var(--text-muted);line-height:1.5;">Lindungi nominal di layar dan simpan salinan data KITA TABUNG kapan pun dibutuhkan.</p>
+            </div>
+            <div class="safety-icon"><i class="fa-solid fa-shield-halved"></i></div>
+          </div>
+
+          <div class="safety-row">
+            <div class="safety-row-main">
+              <div class="safety-icon"><i class="fa-solid fa-eye-slash"></i></div>
+              <div>
+                <div class="safety-title">Mode Privasi</div>
+                <div class="safety-sub">Sembunyikan nominal uang di dashboard, budget, dompet, target, riwayat, dan ringkasan.</div>
+              </div>
+            </div>
+            <label class="switch" style="flex:0 0 auto;">
+              <input type="checkbox" id="setting-privacy-toggle" onchange="togglePrivacyFromSetting()">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="safety-row control-row">
+            <div class="safety-row-main">
+              <div class="safety-icon"><i class="fa-solid fa-mobile-screen"></i></div>
+              <div>
+                <div class="safety-title">Saat aplikasi dibuka</div>
+                <div class="safety-sub">Tentukan apakah nominal langsung disembunyikan atau mengikuti pilihan terakhir.</div>
+              </div>
+            </div>
+            <select id="privacy-reopen-mode" class="form-control safety-select" onchange="changePrivacyReopenMode()">
+              <option value="remember">Ingat pilihan terakhir</option>
+              <option value="hidden">Selalu sembunyikan nominal</option>
+              <option value="visible">Selalu tampilkan nominal</option>
+            </select>
+          </div>
+
+          <div class="safety-row" style="display:block;">
+            <div class="safety-row-main">
+              <div class="safety-icon"><i class="fa-solid fa-database"></i></div>
+              <div>
+                <div class="safety-title">Backup Manual</div>
+                <div class="safety-sub">Download seluruh data keuangan sebagai file JSON. Password, session, dan API key tidak ikut tersimpan.</div>
+              </div>
+            </div>
+            <div class="backup-actions">
+              <button type="button" class="btn-secondary" onclick="downloadFinanceBackup()"><i class="fa-solid fa-download"></i> Download Backup</button>
+              <button type="button" class="btn-secondary" onclick="triggerRestoreBackup()"><i class="fa-solid fa-upload"></i> Restore Backup</button>
+            </div>
+            <input type="file" id="restore-backup-input" accept="application/json,.json" hidden onchange="handleRestoreBackupFile(event)">
+            <div class="backup-status" id="backup-status">Backup tersimpan di perangkat kamu. Supabase tetap menjadi penyimpanan utama.</div>
+          </div>
+        </div>
+
         <!-- Danger Zone -->
         <div class="bento-card" style="border: 1px solid var(--danger); background: var(--danger-soft);">
           <h4 style="color:var(--danger); margin-bottom: 8px; display:flex; align-items:center; gap:8px;">
@@ -3543,6 +3631,26 @@
 
 <!-- ================= MODALS ================= -->
 <!-- Global Search -->
+
+<!-- V10 Restore Backup Preview -->
+<div class="modal-overlay" id="modal-restore-backup">
+  <div class="modal-content" style="max-width:500px;">
+    <div class="modal-header">
+      <div>
+        <h3 style="margin:0;">Pulihkan Backup</h3>
+        <p style="font-size:.72rem;color:var(--text-muted);margin-top:4px;">Periksa isi file sebelum data saat ini diganti.</p>
+      </div>
+      <button class="modal-close" type="button" onclick="cancelRestoreBackup()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="restore-summary" id="restore-backup-summary"></div>
+    <div class="restore-warning"><i class="fa-solid fa-triangle-exclamation"></i> Sebelum restore, KITA TABUNG otomatis menyimpan snapshot kondisi saat ini di perangkat sebagai pengaman lokal.</div>
+    <div class="inline-actions" style="margin-top:18px;">
+      <button type="button" class="btn-secondary" style="flex:1;" onclick="cancelRestoreBackup()">Batal</button>
+      <button type="button" class="btn-submit" style="flex:1;margin:0;" id="confirm-restore-backup-btn" onclick="confirmRestoreBackup()"><i class="fa-solid fa-rotate-left"></i> Pulihkan Data</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay global-search-overlay" id="modal-global-search" onclick="handleGlobalSearchBackdrop(event)">
   <div class="global-search-panel" role="dialog" aria-modal="true" aria-labelledby="global-search-title">
     <div class="global-search-bar">
@@ -4139,7 +4247,7 @@ let cloudSyncTimer = null;
 let cloudSyncRunning = false;
 let cloudLastSavedAt = null;
 
-// V9.4: OTP entry is visible above login, persists across mobile app switching, and can be reopened from the auth screen.
+// V10.0: OTP entry is visible above login, persists across mobile app switching, and can be reopened from the auth screen.
 let pendingEmailOtp = { flow: null, email: '', displayName: '', emoji: '' };
 const PENDING_EMAIL_OTP_KEY = 'KITA_TABUNG_PENDING_EMAIL_OTP_V1';
 
@@ -4586,7 +4694,86 @@ function bindAdaptiveThemeListener() {
 
 
 const BALANCE_VISIBILITY_KEY = 'KITA_TABUNG_BALANCE_VISIBLE';
-let balanceAmountsVisible = localStorage.getItem(BALANCE_VISIBILITY_KEY) !== '0';
+const PRIVACY_SETTINGS_KEY = 'KITA_TABUNG_PRIVACY_V2';
+
+function normalizePrivacySettings(candidate = {}) {
+  const legacyHidden = localStorage.getItem(BALANCE_VISIBILITY_KEY) === '0';
+  const mode = ['remember','hidden','visible'].includes(candidate?.reopenMode) ? candidate.reopenMode : 'remember';
+  return {
+    enabled: typeof candidate?.enabled === 'boolean' ? candidate.enabled : legacyHidden,
+    reopenMode: mode
+  };
+}
+
+let privacySettings = normalizePrivacySettings(readJsonStorage(PRIVACY_SETTINGS_KEY) || {});
+let privacyModeEnabled = privacySettings.reopenMode === 'hidden'
+  ? true
+  : privacySettings.reopenMode === 'visible'
+    ? false
+    : privacySettings.enabled === true;
+let balanceAmountsVisible = !privacyModeEnabled;
+
+function persistPrivacySettings() {
+  privacySettings.enabled = privacyModeEnabled;
+  try { localStorage.setItem(PRIVACY_SETTINGS_KEY, JSON.stringify(privacySettings)); } catch (error) { console.warn('Privasi gagal disimpan:', error); }
+  localStorage.setItem(BALANCE_VISIBILITY_KEY, privacyModeEnabled ? '0' : '1');
+}
+
+function maskCurrencyText(text) {
+  return String(text ?? '').replace(/([+\-]?\s*Rp\s*)(?:\d[\d.,]*)(?:\s*(?:rb|ribu|jt|juta|k|m))?/gi, '$1•••••••');
+}
+
+function applyPrivacyModeToDOM() {
+  const nodes = document.querySelectorAll('body *');
+  nodes.forEach(el => {
+    if (['SCRIPT','STYLE','INPUT','TEXTAREA','CANVAS'].includes(el.tagName)) return;
+    if (el.children.length > 0) return;
+    if (privacyModeEnabled) {
+      const current = el.textContent || '';
+      if (!/Rp\s*\d/i.test(current)) return;
+      el.dataset.privacyOriginalText = current;
+      el.textContent = maskCurrencyText(current);
+    } else if (el.dataset.privacyOriginalText) {
+      el.textContent = el.dataset.privacyOriginalText;
+      delete el.dataset.privacyOriginalText;
+    }
+  });
+}
+
+function updatePrivacySettingsUI() {
+  const toggle = $('setting-privacy-toggle');
+  const select = $('privacy-reopen-mode');
+  if (toggle) toggle.checked = privacyModeEnabled;
+  if (select) select.value = privacySettings.reopenMode;
+}
+
+function setPrivacyMode(enabled, options = {}) {
+  const wasPrivacyEnabled = privacyModeEnabled;
+  privacyModeEnabled = Boolean(enabled);
+  if (wasPrivacyEnabled && !privacyModeEnabled) applyPrivacyModeToDOM();
+  balanceAmountsVisible = !privacyModeEnabled;
+  persistPrivacySettings();
+  updateBalanceVisibilityControl();
+  updatePrivacySettingsUI();
+  if (options.renderApp !== false) render();
+  else requestAnimationFrame(applyPrivacyModeToDOM);
+  if (options.toast !== false) showToast(privacyModeEnabled ? 'Mode Privasi aktif. Nominal uang disembunyikan.' : 'Mode Privasi dimatikan. Nominal uang ditampilkan.');
+}
+
+function togglePrivacyFromSetting() {
+  setPrivacyMode($('setting-privacy-toggle')?.checked === true);
+}
+
+function changePrivacyReopenMode() {
+  const value = $('privacy-reopen-mode')?.value || 'remember';
+  privacySettings.reopenMode = ['remember','hidden','visible'].includes(value) ? value : 'remember';
+  persistPrivacySettings();
+  showToast(privacySettings.reopenMode === 'hidden'
+    ? 'Saat aplikasi dibuka, nominal akan selalu disembunyikan.'
+    : privacySettings.reopenMode === 'visible'
+      ? 'Saat aplikasi dibuka, nominal akan selalu ditampilkan.'
+      : 'KITA TABUNG akan mengingat pilihan privasi terakhir.');
+}
 
 function maskMetricValue(element, text = 'Rp •••••••') {
   if (!element) return;
@@ -4601,25 +4788,22 @@ function updateBalanceVisibilityControl() {
   const button = $('balance-visibility-toggle');
   const icon = $('balance-visibility-icon');
   if (!button || !icon) return;
-  const hidden = !balanceAmountsVisible;
+  const hidden = privacyModeEnabled;
   icon.className = `fa-solid ${hidden ? 'fa-eye-slash' : 'fa-eye'}`;
   const label = hidden
-    ? (state.lang === 'en' ? 'Show balance amounts' : 'Tampilkan nominal saldo')
-    : (state.lang === 'en' ? 'Hide balance amounts' : 'Sembunyikan nominal saldo');
+    ? (state.lang === 'en' ? 'Show all money amounts' : 'Tampilkan semua nominal')
+    : (state.lang === 'en' ? 'Hide all money amounts' : 'Aktifkan Mode Privasi');
   button.setAttribute('aria-label', label);
   button.setAttribute('title', label);
   button.setAttribute('aria-pressed', hidden ? 'true' : 'false');
 }
 
 function toggleBalanceVisibility() {
-  balanceAmountsVisible = !balanceAmountsVisible;
-  localStorage.setItem(BALANCE_VISIBILITY_KEY, balanceAmountsVisible ? '1' : '0');
-  updateBalanceVisibilityControl();
-  renderHome();
+  setPrivacyMode(!privacyModeEnabled);
 }
 
 function renderPrivateBalanceMetric(element, target, options = {}) {
-  if (!balanceAmountsVisible) {
+  if (privacyModeEnabled) {
     const prefix = options.prefix || '';
     maskMetricValue(element, `${prefix}${options.mask || 'Rp •••••••'}`);
     return;
@@ -5353,7 +5537,7 @@ function syncPaydayControls() {
 function renderSafeSpendAndForecast() {
   const safe = calculateSafeSpend();
   const safeValue = $('safe-spend-value');
-  animateMetricValue(safeValue, Math.max(0, Math.floor(safe.safeToday)), { currency:true });
+  renderPrivateBalanceMetric(safeValue, Math.max(0, Math.floor(safe.safeToday)), { currency:true });
   if ($('safe-spend-detail')) {
     $('safe-spend-detail').textContent = state.lang === 'en'
       ? `${safe.days} days until payday. Bills ${toRp(safe.billTotal)}, reserved goals ${toRp(safe.reservedGoals)}, minimum reserve ${toRp(safe.reserve)}.`
@@ -5374,7 +5558,7 @@ function renderSafeSpendAndForecast() {
   }
 
   const forecast = calculateForecast();
-  animateMetricValue($('forecast-balance-value'), Math.round(forecast.predictedBalance), { currency:true });
+  renderPrivateBalanceMetric($('forecast-balance-value'), Math.round(forecast.predictedBalance), { currency:true });
   if ($('forecast-detail')) {
     $('forecast-detail').textContent = state.lang === 'en'
       ? `Scheduled income ${toRp(forecast.scheduledIncome)}, upcoming bills ${toRp(forecast.upcomingBills)}, projected variable spending ${toRp(Math.round(forecast.projectedVariable))}.`
@@ -5449,7 +5633,7 @@ function renderWeeklyRecap() {
       <div class="weekly-carousel-dots" id="weekly-carousel-dots">${[0,1,2,3].map(i => `<button type="button" class="weekly-dot${i===0?' active':''}" onclick="goToWeeklyRecapSlide(${i})" aria-label="Slide ${i+1}"></button>`).join('')}</div>
       <div class="weekly-carousel-controls"><button type="button" class="weekly-carousel-btn" onclick="scrollWeeklyRecap(-1)" aria-label="Sebelumnya"><i class="fa-solid fa-chevron-left"></i></button><button type="button" class="weekly-carousel-btn" onclick="scrollWeeklyRecap(1)" aria-label="Berikutnya"><i class="fa-solid fa-chevron-right"></i></button></div>
     </div>`;
-  animateMetricValue($('weekly-expense-value'), current.expense, { currency:true });
+  renderPrivateBalanceMetric($('weekly-expense-value'), current.expense, { currency:true });
   animateMetricValue($('weekly-change-value'), change, { prefix: change > 0 ? '+' : '', suffix:'%', decimals:1 });
   animateMetricValue($('weekly-no-spend-value'), noSpendDays, { duration:420 });
   requestAnimationFrame(bindWeeklyCarouselScroll);
@@ -5533,15 +5717,18 @@ function openRecurringBillModal(id = null) {
 
 function deleteRecurringBill(id) {
   const bill = state.recurringBills.find(item => item.id === id);
-  if (!bill || !confirm(`Hapus tagihan berulang “${bill.name}”?`)) return;
+  if (!bill) return;
+  const before = cloneFinanceSnapshot();
   state.recurringBills = state.recurringBills.filter(item => item.id !== id);
   saveData();
   render();
+  showUndoToast(`Tagihan “${bill.name}” dihapus.`, before);
 }
 
 function markRecurringBillPaid(id) {
   const bill = state.recurringBills.find(item => item.id === id);
   if (!bill) return;
+  const before = cloneFinanceSnapshot();
   const account = state.accounts.find(item => item.id === bill.accountId);
   if (!account) return showToast('Dompet pembayaran tidak ditemukan. Edit tagihan terlebih dahulu.', true);
   if (!confirm(`Tandai ${bill.name} sebesar ${toRp(bill.amount)} sudah dibayar dari ${account.name}?`)) return;
@@ -5563,7 +5750,7 @@ function markRecurringBillPaid(id) {
   bill.nextDueDate = nextKey;
   saveData();
   render();
-  showToast('Tagihan dicatat sebagai pengeluaran dan jadwal berikutnya diperbarui.');
+  showUndoToast('Tagihan dicatat sebagai pengeluaran dan jadwal berikutnya diperbarui.', before);
 }
 
 function renderRecurringBills() {
@@ -5632,10 +5819,12 @@ function openGoalContributionModal(id, mode = 'deposit') {
 
 function deleteGoal(id) {
   const goal = state.goals.find(item => item.id === id);
-  if (!goal || !confirm(`Hapus target “${goal.name}” beserta riwayat setorannya?`)) return;
+  if (!goal) return;
+  const before = cloneFinanceSnapshot();
   state.goals = state.goals.filter(item => item.id !== id);
   saveData();
   render();
+  showUndoToast(`Target “${goal.name}” dihapus.`, before);
 }
 
 function renderGoals() {
@@ -5911,7 +6100,7 @@ function resetCustomTheme() {
   showToast('Tema dikembalikan ke pengaturan awal.');
 }
 
-function showToast(message, isError = false) {
+function showToast(message, isError = false, options = {}) {
   let stack = $('toast-stack');
   if (!stack) {
     stack = document.createElement('div');
@@ -5919,15 +6108,20 @@ function showToast(message, isError = false) {
     document.body.appendChild(stack);
   }
   const toast = document.createElement('div');
-  const duration = 3200;
-  toast.className = `modern-toast${isError ? ' error' : ''}`;
+  const duration = Math.max(1600, Number(options.duration || 3200));
+  const hasAction = typeof options.onAction === 'function' && options.actionLabel;
+  toast.className = `modern-toast${isError ? ' error' : ''}${hasAction ? ' has-action' : ''}`;
   toast.style.setProperty('--toast-duration', `${duration}ms`);
+  const title = options.title || (isError ? (state.lang === 'en' ? 'Something went wrong' : 'Terjadi masalah') : (state.lang === 'en' ? 'Done' : 'Berhasil'));
+  const icon = options.icon || (isError ? 'fa-triangle-exclamation' : 'fa-circle-check');
   toast.innerHTML = `
-    <span class="modern-toast-icon"><i class="fa-solid ${isError ? 'fa-triangle-exclamation' : 'fa-circle-check'}"></i></span>
-    <span class="modern-toast-copy"><strong class="modern-toast-title">${isError ? (state.lang === 'en' ? 'Something went wrong' : 'Terjadi masalah') : (state.lang === 'en' ? 'Done' : 'Berhasil')}</strong><span class="modern-toast-message"></span></span>
+    <span class="modern-toast-icon"><i class="fa-solid ${icon}"></i></span>
+    <span class="modern-toast-copy"><strong class="modern-toast-title"></strong><span class="modern-toast-message"></span></span>
+    ${hasAction ? '<button type="button" class="modern-toast-action"></button>' : ''}
     <button type="button" class="modern-toast-close" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
     <span class="modern-toast-progress"></span>`;
-  toast.querySelector('.modern-toast-message').textContent = String(message || '');
+  toast.querySelector('.modern-toast-title').textContent = title;
+  toast.querySelector('.modern-toast-message').textContent = privacyModeEnabled ? maskCurrencyText(String(message || '')) : String(message || '');
   const dismiss = () => {
     if (toast.dataset.closing === '1') return;
     toast.dataset.closing = '1';
@@ -5935,10 +6129,64 @@ function showToast(message, isError = false) {
     setTimeout(() => toast.remove(), 260);
   };
   toast.querySelector('.modern-toast-close').addEventListener('click', dismiss);
+  if (hasAction) {
+    const action = toast.querySelector('.modern-toast-action');
+    action.textContent = String(options.actionLabel);
+    action.addEventListener('click', () => {
+      dismiss();
+      options.onAction();
+    });
+  }
   stack.appendChild(toast);
   while (stack.children.length > 4) stack.firstElementChild?.remove();
-  requestAnimationFrame(() => toast.classList.add('show'));
+  requestAnimationFrame(() => { toast.classList.add('show'); applyPrivacyModeToDOM(); });
   setTimeout(dismiss, duration);
+  return toast;
+}
+
+let pendingUndoAction = null;
+let pendingUndoTimer = 0;
+
+function cloneFinanceSnapshot() {
+  return JSON.parse(JSON.stringify(state));
+}
+
+function stateFingerprint(value = state) {
+  try { return JSON.stringify(value); } catch { return ''; }
+}
+
+function showUndoToast(message, beforeSnapshot) {
+  clearTimeout(pendingUndoTimer);
+  pendingUndoAction = {
+    before: JSON.parse(JSON.stringify(beforeSnapshot)),
+    afterFingerprint: stateFingerprint(state)
+  };
+  pendingUndoTimer = setTimeout(() => { pendingUndoAction = null; }, 7200);
+  showToast(message, false, {
+    duration: 7000,
+    title: state.lang === 'en' ? 'Saved' : 'Perubahan disimpan',
+    icon: 'fa-rotate-left',
+    actionLabel: state.lang === 'en' ? 'UNDO' : 'URUNGKAN',
+    onAction: undoLastAction
+  });
+}
+
+function undoLastAction() {
+  if (!pendingUndoAction) return showToast('Waktu untuk mengurungkan sudah habis.', true);
+  if (stateFingerprint(state) !== pendingUndoAction.afterFingerprint) {
+    pendingUndoAction = null;
+    clearTimeout(pendingUndoTimer);
+    return showToast('Data sudah berubah lagi. Urungkan dibatalkan agar perubahan terbaru tidak ikut hilang.', true);
+  }
+  const snapshot = pendingUndoAction.before;
+  pendingUndoAction = null;
+  clearTimeout(pendingUndoTimer);
+  clearTimeout(cloudSyncTimer);
+  state = normalizeFinanceState(snapshot, getSavedThemeSnapshot());
+  saveData();
+  applyTheme();
+  render();
+  showToast('Perubahan berhasil diurungkan.', false, { icon:'fa-arrow-rotate-left' });
 }
 
 function setWheelFromHex(hex, redraw = true) {
@@ -6689,7 +6937,7 @@ function deleteBudgetFromModal() {
     ? `Delete budget “${budget.name}”?${linkedCount ? `\n\n${linkedCount} transaction(s) linked to this budget will remain in history and only be unlinked from the budget.` : ''}`
     : `Hapus budget “${budget.name}”?${linkedCount ? `\n\n${linkedCount} transaksi yang memakai budget ini tetap tersimpan di riwayat dan hanya akan dilepas dari budget.` : ''}`;
 
-  if (!confirm(message)) return;
+  const before = cloneFinanceSnapshot();
 
   state.budgets = state.budgets.filter(item => item.id !== id);
   state.transactions.forEach(tx => {
@@ -6699,7 +6947,7 @@ function deleteBudgetFromModal() {
   saveData();
   closeModal('modal-budget');
   render();
-  showToast(state.lang === 'en' ? 'Budget deleted.' : 'Budget berhasil dihapus.');
+  showUndoToast(state.lang === 'en' ? `Budget “${budget.name}” deleted.` : `Budget “${budget.name}” dihapus.`, before);
 }
 
 // --- AI History Features ---
@@ -6853,6 +7101,7 @@ $('form-goal').addEventListener('submit', event => {
 $('form-goal-contribution').addEventListener('submit', event => {
   event.preventDefault();
   const goal = state.goals.find(item => item.id === $('goal-contribution-goal-id').value);
+  const before = cloneFinanceSnapshot();
   if (!goal) return;
   const amount = Number($('goal-contribution-amount').value || 0);
   const date = $('goal-contribution-date').value;
@@ -6867,7 +7116,7 @@ $('form-goal-contribution').addEventListener('submit', event => {
   saveData();
   render();
   closeModal('modal-goal-contribution');
-  showToast(mode === 'withdraw' ? 'Penarikan dana target tersimpan.' : 'Setoran target tersimpan.');
+  showUndoToast(mode === 'withdraw' ? 'Penarikan dana target tersimpan.' : 'Setoran target tersimpan.', before);
 });
 
 $('form-wallet').addEventListener('submit', (e) => {
@@ -6932,6 +7181,7 @@ $('form-tx').addEventListener('submit', (e) => {
 
   const oldTx = id ? state.transactions.find(t => t.id === id) : null;
   if (id && !oldTx) return alert('Transaksi tidak ditemukan.');
+  const beforeNewTransaction = id ? null : cloneFinanceSnapshot();
 
   let receiptMeta = oldTx?.receiptMeta || null;
   if (receiptDraft) {
@@ -6971,7 +7221,12 @@ $('form-tx').addEventListener('submit', (e) => {
   } else { state.transactions.push(txData); }
 
   applyBalance(txData); saveData(); render(); closeModal('modal-tx');
-  if (receiptMeta) showToast('Transaksi dari struk berhasil disimpan.');
+  if (!id && beforeNewTransaction) {
+    const label = type === 'expense' ? 'Pengeluaran' : type === 'income' ? 'Pemasukan' : type === 'transfer' ? 'Transfer' : 'Transaksi utang/piutang';
+    showUndoToast(`${label} ${toRp(amount)} berhasil dicatat.`, beforeNewTransaction);
+  } else if (receiptMeta) {
+    showToast('Transaksi dari struk berhasil diperbarui.');
+  }
   resetReceiptScanner({ hidePanel:true });
 });
 
@@ -6993,9 +7248,150 @@ function revertBalance(tx) {
   }
 }
 function deleteTx(id) {
-  if(!confirm(t('confirm_del'))) return;
-  const tx = state.transactions.find(t => t.id === id); if(tx) revertBalance(tx);
-  state.transactions = state.transactions.filter(t => t.id !== id); saveData(); render();
+  const tx = state.transactions.find(t => t.id === id);
+  if (!tx) return;
+  const before = cloneFinanceSnapshot();
+  revertBalance(tx);
+  state.transactions = state.transactions.filter(t => t.id !== id);
+  saveData();
+  render();
+  showUndoToast(`Transaksi ${toRp(tx.amount)} dihapus.`, before);
+}
+
+
+// ================= V10 BACKUP & RESTORE =================
+const BACKUP_VERSION = 1;
+const PRE_RESTORE_BACKUP_KEY = 'KITA_TABUNG_PRE_RESTORE_BACKUP_V1';
+let pendingRestoreBackup = null;
+
+function buildFinanceBackupPayload() {
+  return {
+    app: 'KITA TABUNG',
+    backupVersion: BACKUP_VERSION,
+    createdAt: new Date().toISOString(),
+    finance: normalizeFinanceState(state, null),
+    privacy: {
+      enabled: privacyModeEnabled,
+      reopenMode: privacySettings.reopenMode
+    }
+  };
+}
+
+function formatBackupFilename(date = new Date()) {
+  return `KITA-TABUNG-BACKUP-${date.getFullYear()}-${pad2(date.getMonth()+1)}-${pad2(date.getDate())}.json`;
+}
+
+function downloadFinanceBackup(options = {}) {
+  try {
+    const payload = buildFinanceBackupPayload();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = formatBackupFilename();
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1200);
+    if (!options.silent) {
+      const status = $('backup-status');
+      if (status) status.textContent = `Backup terakhir dibuat ${new Date().toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'})}.`;
+      showToast('Backup KITA TABUNG berhasil didownload.');
+    }
+    return true;
+  } catch (error) {
+    console.error('Backup gagal:', error);
+    if (!options.silent) showToast(`Backup gagal: ${error.message}`, true);
+    return false;
+  }
+}
+
+function triggerRestoreBackup() {
+  const input = $('restore-backup-input');
+  if (!input) return;
+  input.value = '';
+  input.click();
+}
+
+function validateBackupEnvelope(parsed) {
+  if (!parsed || typeof parsed !== 'object') throw new Error('Isi file tidak valid.');
+  if (parsed.app !== 'KITA TABUNG') throw new Error('File ini bukan backup resmi KITA TABUNG.');
+  if (Number(parsed.backupVersion) !== BACKUP_VERSION) throw new Error(`Versi backup ${parsed.backupVersion ?? '-'} belum didukung.`);
+  const finance = parsed.finance || parsed.data;
+  if (!finance || typeof finance !== 'object') throw new Error('Data keuangan tidak ditemukan di file backup.');
+  const known = ['transactions','accounts','budgets','recurringBills','goals','payday'];
+  if (!known.some(key => Object.prototype.hasOwnProperty.call(finance, key))) throw new Error('Struktur data backup tidak dikenali.');
+  return normalizeFinanceState(finance, null);
+}
+
+async function handleRestoreBackupFile(event) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+  try {
+    if (file.size > 5 * 1024 * 1024) throw new Error('File backup terlalu besar. Maksimal 5 MB.');
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    const normalized = validateBackupEnvelope(parsed);
+    pendingRestoreBackup = { parsed, normalized, fileName:file.name };
+    const created = parsed.createdAt ? new Date(parsed.createdAt) : null;
+    const summary = $('restore-backup-summary');
+    if (summary) summary.innerHTML = `
+      <div class="restore-summary-row"><span>File</span><strong>${escapeHtml(file.name)}</strong></div>
+      <div class="restore-summary-row"><span>Dibuat</span><strong>${created && !Number.isNaN(created.getTime()) ? escapeHtml(created.toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'})) : '-'}</strong></div>
+      <div class="restore-summary-row"><span>Transaksi</span><strong>${normalized.transactions.length}</strong></div>
+      <div class="restore-summary-row"><span>Dompet</span><strong>${normalized.accounts.length}</strong></div>
+      <div class="restore-summary-row"><span>Budget</span><strong>${normalized.budgets.length}</strong></div>
+      <div class="restore-summary-row"><span>Target / Tagihan</span><strong>${normalized.goals.length} / ${normalized.recurringBills.length}</strong></div>`;
+    openModal('modal-restore-backup');
+  } catch (error) {
+    pendingRestoreBackup = null;
+    showToast(error.message || 'File backup tidak dapat dibaca.', true);
+  } finally {
+    if (event?.target) event.target.value = '';
+  }
+}
+
+function cancelRestoreBackup() {
+  pendingRestoreBackup = null;
+  const modal = $('modal-restore-backup');
+  if (modal) modal.style.display = 'none';
+}
+
+async function confirmRestoreBackup() {
+  if (!pendingRestoreBackup) return showToast('Pilih file backup terlebih dahulu.', true);
+  const button = $('confirm-restore-backup-btn');
+  if (button) { button.disabled = true; button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memulihkan...'; }
+  try {
+    const safetySnapshot = buildFinanceBackupPayload();
+    try { localStorage.setItem(PRE_RESTORE_BACKUP_KEY, JSON.stringify(safetySnapshot)); } catch (error) { console.warn('Snapshot pengaman restore gagal disimpan:', error); }
+
+    state = pendingRestoreBackup.normalized;
+    if (pendingRestoreBackup.parsed?.privacy) {
+      privacySettings = normalizePrivacySettings(pendingRestoreBackup.parsed.privacy);
+      privacyModeEnabled = privacySettings.reopenMode === 'hidden'
+        ? true
+        : privacySettings.reopenMode === 'visible'
+          ? false
+          : privacySettings.enabled === true;
+      balanceAmountsVisible = !privacyModeEnabled;
+      persistPrivacySettings();
+    }
+
+    saveLocalCache();
+    persistThemeState();
+    applyTheme();
+    syncThemeControls();
+    render();
+    await saveCloudState({ force:true });
+    pendingRestoreBackup = null;
+    closeModal('modal-restore-backup');
+    showToast('Backup berhasil dipulihkan dan disinkronkan ke cloud.');
+  } catch (error) {
+    console.error('Restore backup gagal:', error);
+    showToast(`Restore gagal: ${error.message}`, true);
+  } finally {
+    if (button) { button.disabled = false; button.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Pulihkan Data'; }
+  }
 }
 
 // ================= EXPORT PDF (NEW) =================
@@ -7067,7 +7463,15 @@ function getIconData(type) {
   }
 }
 
-function render() { renderHome(); renderBudget(); renderWallet(); renderHistoryFilters(); renderPlanning(); }
+function render() {
+  renderHome();
+  renderBudget();
+  renderWallet();
+  renderHistoryFilters();
+  renderPlanning();
+  updatePrivacySettingsUI();
+  requestAnimationFrame(applyPrivacyModeToDOM);
+}
 
 
 function dashboardDueLabel(dateKey) {
@@ -7257,7 +7661,7 @@ function drawChart(dataObj) {
         const angle = (props.startAngle + props.endAngle) / 2;
         const radius = (props.innerRadius + props.outerRadius) / 2;
         chartCtx.fillStyle = '#FFFFFF';
-        chartCtx.fillText(formatCompactRp(data[index]), props.x + Math.cos(angle) * radius, props.y + Math.sin(angle) * radius);
+        chartCtx.fillText(privacyModeEnabled ? 'Rp •••••' : formatCompactRp(data[index]), props.x + Math.cos(angle) * radius, props.y + Math.sin(angle) * radius);
       });
       chartCtx.restore();
     },
@@ -7268,7 +7672,7 @@ function drawChart(dataObj) {
       const y = (chartArea.top + chartArea.bottom) / 2;
       chartCtx.save(); chartCtx.textAlign = 'center'; chartCtx.textBaseline = 'middle'; chartCtx.fillStyle = textColor;
       chartCtx.font = "700 11px 'Plus Jakarta Sans'"; chartCtx.fillText('Total keluar', x, y - 9);
-      chartCtx.font = "800 13px 'Plus Jakarta Sans'"; chartCtx.fillText(formatCompactRp(total), x, y + 11); chartCtx.restore();
+      chartCtx.font = "800 13px 'Plus Jakarta Sans'"; chartCtx.fillText(privacyModeEnabled ? 'Rp •••••' : formatCompactRp(total), x, y + 11); chartCtx.restore();
     }
   };
 
@@ -7284,7 +7688,7 @@ function drawChart(dataObj) {
       layout: { padding: 12 },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: context => `${context.label}: ${toRp(context.raw)} (${total ? ((context.raw/total)*100).toFixed(1) : 0}%)` } }
+        tooltip: { callbacks: { label: context => `${context.label}: ${privacyModeEnabled ? 'Rp •••••••' : toRp(context.raw)} (${total ? ((context.raw/total)*100).toFixed(1) : 0}%)` } }
       }
     }
   });
@@ -7379,6 +7783,7 @@ function renderHistory() {
     });
   }
   $('full-tx-list').innerHTML = html;
+  requestAnimationFrame(applyPrivacyModeToDOM);
 }
 
 // ================= ONLINE AI FINANCE CHAT =================
@@ -7429,6 +7834,7 @@ function appendAIMessage(role, text, persist = true) {
     state.aiChat.push({ role, text: safeText(text, 5000), at: Date.now() });
     state.aiChat = state.aiChat.slice(-20); saveData();
   }
+  requestAnimationFrame(applyPrivacyModeToDOM);
   return bubble;
 }
 
