@@ -1,39 +1,4 @@
-
-const AUTH_PROJECT_URL = 'https://xmodzjfhsrqgunrkrwbp.supabase.co';
-const AUTH_PUBLISHABLE_KEY = 'sb_publishable_CzFv_8l_3Dl9zYh0axf6yA_gssPk3AR';
-
-async function authenticatedUser(req) {
-  const authorization = String(req.headers?.authorization || '');
-  if (!authorization.startsWith('Bearer ')) return null;
-  try {
-    const response = await fetch(`${AUTH_PROJECT_URL}/auth/v1/user`, {
-      headers: { apikey: AUTH_PUBLISHABLE_KEY, Authorization: authorization }
-    });
-    if (!response.ok) return null;
-    const user = await response.json().catch(() => null);
-    return user?.id ? user : null;
-  } catch (_) { return null; }
-}
-
-function originAllowed(req) {
-  const origin = String(req.headers?.origin || '');
-  if (!origin) return true;
-  if (origin === 'https://www.kitabung.online' || origin === 'https://kitabung.online') return true;
-  if (process.env.VERCEL_ENV !== 'production' && /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin)) return true;
-  return false;
-}
-
-function contentLengthOk(req, maxBytes) {
-  const n = Number(req.headers?.['content-length'] || 0);
-  return !Number.isFinite(n) || n <= 0 || n <= maxBytes;
-}
-
-function send(res, status, payload) {
-  res.statusCode = status;
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-store');
-  res.end(JSON.stringify(payload));
-}
+const { authenticatedUser, originAllowed, contentLengthOk, send, cleanText, checkRateLimit, rateHeaders } = require('./_lib/security');
 
 function clean(value, max = 6000) {
   return String(value || '').replace(/[\u0000-\u001F\u007F]/g, ' ').trim().slice(0, max);
@@ -48,6 +13,8 @@ module.exports = async function handler(req, res) {
   if (!contentLengthOk(req, 64 * 1024)) return send(res, 413, { error: 'Payload terlalu besar.' });
   const user = await authenticatedUser(req);
   if (!user) return send(res, 401, { code:'AUTH_REQUIRED', error:'Sesi login diperlukan.' });
+  const rate = checkRateLimit(req, { userId:user.id, scope:'chat', limit:30, windowMs:10*60*1000 });
+  if (!rate.allowed) return send(res, 429, { error:'Terlalu banyak permintaan AI. Coba lagi beberapa menit.' }, rateHeaders(rate));
   if (pin && req.headers['x-ai-pin'] !== pin) return send(res, 403, { code:'PIN_INVALID', error: 'PIN AI salah.' });
   if (!apiKey) return send(res, 503, { error: 'GEMINI_API_KEY belum diatur di Vercel.' });
 
