@@ -4,6 +4,36 @@ const ALLOWED_CATEGORIES = [
   'Tabungan & Investasi', 'Lainnya'
 ];
 
+
+const AUTH_PROJECT_URL = 'https://xmodzjfhsrqgunrkrwbp.supabase.co';
+const AUTH_PUBLISHABLE_KEY = 'sb_publishable_CzFv_8l_3Dl9zYh0axf6yA_gssPk3AR';
+
+async function authenticatedUser(req) {
+  const authorization = String(req.headers?.authorization || '');
+  if (!authorization.startsWith('Bearer ')) return null;
+  try {
+    const response = await fetch(`${AUTH_PROJECT_URL}/auth/v1/user`, {
+      headers: { apikey: AUTH_PUBLISHABLE_KEY, Authorization: authorization }
+    });
+    if (!response.ok) return null;
+    const user = await response.json().catch(() => null);
+    return user?.id ? user : null;
+  } catch (_) { return null; }
+}
+
+function originAllowed(req) {
+  const origin = String(req.headers?.origin || '');
+  if (!origin) return true;
+  if (origin === 'https://www.kitabung.online' || origin === 'https://kitabung.online') return true;
+  if (process.env.VERCEL_ENV !== 'production' && /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin)) return true;
+  return false;
+}
+
+function contentLengthOk(req, maxBytes) {
+  const n = Number(req.headers?.['content-length'] || 0);
+  return !Number.isFinite(n) || n <= 0 || n <= maxBytes;
+}
+
 function send(res, status, payload) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -187,14 +217,18 @@ module.exports = async function handler(req, res) {
     return send(res, 200, {
       configured: Boolean(process.env.GEMINI_API_KEY),
       pinRequired: Boolean(process.env.RECEIPT_SCAN_PIN),
-      model: process.env.GEMINI_RECEIPT_MODEL || process.env.GEMINI_MODEL || 'gemini-2.5-flash'
+      model: process.env.GEMINI_RECEIPT_MODEL || process.env.GEMINI_MODEL || 'gemini-3.6-flash'
     });
   }
   if (req.method !== 'POST') return send(res, 405, { error: 'Method tidak didukung.' });
+  if (!originAllowed(req)) return send(res, 403, { error: 'Origin tidak diizinkan.' });
+  if (!contentLengthOk(req, 2 * 1024 * 1024)) return send(res, 413, { error: 'Payload terlalu besar.' });
+  const user = await authenticatedUser(req);
+  if (!user) return send(res, 401, { code:'AUTH_REQUIRED', error:'Sesi login diperlukan.' });
 
   const configuredPin = process.env.RECEIPT_SCAN_PIN || '';
   if (configuredPin && req.headers['x-receipt-pin'] !== configuredPin) {
-    return send(res, 401, { error: 'PIN Scan Struk salah atau belum diisi.' });
+    return send(res, 403, { code:'PIN_INVALID', error: 'PIN Scan Struk salah atau belum diisi.' });
   }
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return send(res, 503, { error: 'GEMINI_API_KEY belum diatur di Vercel.' });
@@ -202,7 +236,7 @@ module.exports = async function handler(req, res) {
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const { mimeType, data } = parseDataUrl(body.imageData);
-    const model = process.env.GEMINI_RECEIPT_MODEL || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+    const model = process.env.GEMINI_RECEIPT_MODEL || process.env.GEMINI_MODEL || 'gemini-3.6-flash';
     const raw = await callGemini({ apiKey, model, mimeType, data });
     const result = sanitizeResult(raw);
     return send(res, 200, result);
