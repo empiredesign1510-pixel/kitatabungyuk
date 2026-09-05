@@ -1,3 +1,21 @@
+KITA TABUNG V10.0 — SAFETY & PRIVACY UPDATE
+
+FITUR BARU
+- Undo 7 detik untuk transaksi baru, hapus transaksi, hapus budget, hapus target, hapus tagihan, pembayaran tagihan, dan setor/tarik target.
+- Backup manual JSON dari Setting > Data & Privasi.
+- Restore backup dengan validasi file, preview isi, snapshot pengaman lokal sebelum data diganti, lalu sync kembali ke Supabase.
+- Mode Privasi global: nominal uang dimasking di dashboard, budget, dompet, target, tagihan, riwayat, weekly recap, chart, dan tampilan terkait.
+- Tombol mata pada kartu saldo sekarang mengaktifkan/menonaktifkan Mode Privasi global.
+- Opsi saat aplikasi dibuka: ingat pilihan terakhir / selalu sembunyikan / selalu tampilkan.
+
+CATATAN BACKUP
+- Backup tidak berisi password, session login, API key, atau token Supabase.
+- Supabase tetap menjadi penyimpanan utama. File JSON adalah safety copy manual.
+- Sebelum Restore, aplikasi menyimpan snapshot kondisi saat ini ke localStorage sebagai pengaman internal.
+
+DEPLOY
+Upload seluruh isi ZIP ke Vercel dengan struktur folder tetap sama. Setelah deployment Ready, lakukan hard refresh / tutup-buka ulang PWA agar cache V10 aktif.
+
 KITA TABUNG V9.4 — OTP ENTRY MOBILE FIX
 
 Perubahan:

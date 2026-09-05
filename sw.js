@@ -1,8 +1,11 @@
-const CACHE_NAME = 'kita-tabung-shell-v9-3-otp-auth';
-const APP_SHELL = ['./', './index.html', './kt.png', './kt-sidebar.png', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
+const CACHE_NAME = 'kita-tabung-shell-v11-product-foundation';
+const STATIC_SHELL = [
+  './', './index.html', './app.html', './privacy.html', './terms.html', './help.html', './data-delete.html',
+  './assets/public.css', './kt.png', './kt-sidebar.png', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'
+];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_SHELL)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', event => {
@@ -10,17 +13,24 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return;
+  const url = new URL(event.request.url);
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/api/')) return; // Never cache API responses.
+
   if (event.request.mode === 'navigate') {
-    event.respondWith(fetch(event.request).then(response => {
-      const copy = response.clone();
-      caches.open(CACHE_NAME).then(cache => cache.put('./index.html', copy));
+    event.respondWith(fetch(event.request, { cache:'no-store' }).then(response => {
+      if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
       return response;
-    }).catch(() => caches.match('./index.html')));
+    }).catch(async () => {
+      return (await caches.match(event.request)) || (await caches.match('./index.html'));
+    }));
     return;
   }
+
   event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
-    if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
+    if (response.ok && ['style','script','image','font'].includes(event.request.destination)) {
+      caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
+    }
     return response;
   })));
 });
@@ -28,9 +38,7 @@ self.addEventListener('fetch', event => {
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   event.waitUntil(clients.matchAll({ type:'window', includeUncontrolled:true }).then(list => {
-    for (const client of list) {
-      if ('focus' in client) return client.focus();
-    }
-    return clients.openWindow(event.notification.data?.url || './');
+    for (const client of list) if ('focus' in client) return client.focus();
+    return clients.openWindow(event.notification.data?.url || './app.html');
   }));
 });
