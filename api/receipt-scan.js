@@ -182,7 +182,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'GET') {
     return send(res, 200, {
       configured: Boolean(process.env.GEMINI_API_KEY),
-      pinRequired: Boolean(process.env.RECEIPT_SCAN_PIN),
+      pinRequired: false,
       model: process.env.GEMINI_RECEIPT_MODEL || process.env.GEMINI_MODEL || 'gemini-3.6-flash'
     });
   }
@@ -194,10 +194,6 @@ module.exports = async function handler(req, res) {
   const rate = checkRateLimit(req, { userId:user.id, scope:'receipt', limit:20, windowMs:10*60*1000 });
   if (!rate.allowed) return send(res, 429, { error:'Batas scan sementara tercapai. Coba lagi beberapa menit.' }, rateHeaders(rate));
 
-  const configuredPin = process.env.RECEIPT_SCAN_PIN || '';
-  if (configuredPin && req.headers['x-receipt-pin'] !== configuredPin) {
-    return send(res, 403, { code:'PIN_INVALID', error: 'PIN Scan Struk salah atau belum diisi.' });
-  }
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return send(res, 503, { error: 'GEMINI_API_KEY belum diatur di Vercel.' });
 

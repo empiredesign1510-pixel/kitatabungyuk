@@ -2509,22 +2509,12 @@ async function getPrivateApiAuthHeader() {
 }
 
 async function requestReceiptScan(dataUrl) {
-  const pinKey = 'KITA_TABUNG_RECEIPT_PIN';
-  let pin = localStorage.getItem(pinKey) || localStorage.getItem('KITA_TABUNG_AI_PIN') || '';
-  const makeRequest = async () => fetch('/api/receipt-scan', {
+  // Scan struk diamankan oleh sesi login Supabase, tanpa PIN tambahan.
+  const response = await fetch('/api/receipt-scan', {
     method:'POST',
-    headers:{ 'Content-Type':'application/json', Accept:'application/json', ...(await getPrivateApiAuthHeader()), ...(pin ? {'X-RECEIPT-PIN':pin} : {}) },
+    headers:{ 'Content-Type':'application/json', Accept:'application/json', ...(await getPrivateApiAuthHeader()) },
     body:JSON.stringify({ imageData:dataUrl })
   });
-
-  let response = await makeRequest();
-  if (response.status === 403) {
-    pin = safeText(prompt('Masukkan PIN Scan Struk yang diatur di Vercel:') || '', 80);
-    if (!pin) throw new Error('PIN Scan Struk diperlukan.');
-    localStorage.setItem(pinKey, pin);
-    response = await makeRequest();
-    if (response.status === 403) localStorage.removeItem(pinKey);
-  }
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(result.error || `Scan struk gagal (${response.status}).`);
   return result;

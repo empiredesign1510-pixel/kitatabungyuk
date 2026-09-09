@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kita-tabung-shell-v15-major-upgrade';
+const CACHE_NAME = 'kita-tabung-shell-v15-1-receipt-nopin';
 const STATIC_SHELL = [
   './', './index.html', './app.html', './privacy.html', './terms.html', './help.html', './data-delete.html',
   './assets/public.css', './assets/app.css', './assets/upgrade-v15.css', './assets/js/error-monitor.js', './assets/js/app.js', './assets/js/upgrade-v15.js', './kt.png', './kt-sidebar.png', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'
