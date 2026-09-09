@@ -20,11 +20,50 @@ async function authenticatedUser(req) {
   } catch (_) { return null; }
 }
 
+function firstHeaderValue(value) {
+  return String(value || '').split(',')[0].trim();
+}
+
+function normalizeHost(value) {
+  return firstHeaderValue(value).toLowerCase().replace(/:\d+$/, '');
+}
+
 function originAllowed(req) {
-  const origin = String(req.headers?.origin || '');
+  const origin = firstHeaderValue(req.headers?.origin);
   if (!origin) return true;
-  if (origin === 'https://www.kitabung.online' || origin === 'https://kitabung.online') return true;
-  if (process.env.VERCEL_ENV !== 'production' && /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin)) return true;
+
+  let originUrl;
+  try {
+    originUrl = new URL(origin);
+  } catch (_) {
+    return false;
+  }
+
+  const originHost = normalizeHost(originUrl.host);
+  const requestHost = normalizeHost(req.headers?.['x-forwarded-host'] || req.headers?.host);
+
+  // Primary rule: API requests from the same site/domain are always allowed.
+  // This works for the custom domain, www/non-www aliases, and Vercel deployment aliases
+  // without weakening cross-origin protection.
+  if (requestHost && originHost === requestHost) return true;
+
+  const configuredOrigins = String(process.env.APP_ALLOWED_ORIGINS || '')
+    .split(',')
+    .map(value => value.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+
+  const knownOrigins = new Set([
+    'https://www.kitabung.online',
+    'https://kitabung.online',
+    'https://www.kitatabung.online',
+    'https://kitatabung.online',
+    ...configuredOrigins
+  ]);
+
+  const originBase = `${originUrl.protocol}//${originUrl.host}`.replace(/\/$/, '');
+  if (knownOrigins.has(originBase)) return true;
+
+  if (process.env.VERCEL_ENV !== 'production' && /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(originBase)) return true;
   return false;
 }
 
