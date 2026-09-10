@@ -1,7 +1,7 @@
-const CACHE_NAME = 'kita-tabung-shell-v15-1-receipt-nopin';
+const CACHE_NAME = 'kita-tabung-shell-v15-6-video-landing';
 const STATIC_SHELL = [
   './', './index.html', './app.html', './privacy.html', './terms.html', './help.html', './data-delete.html',
-  './assets/public.css', './assets/app.css', './assets/upgrade-v15.css', './assets/js/error-monitor.js', './assets/js/app.js', './assets/js/upgrade-v15.js', './kt.png', './kt-sidebar.png', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'
+  './assets/public.css', './assets/public.js', './assets/app.css', './assets/upgrade-v15.css', './assets/js/error-monitor.js', './assets/js/app.js', './assets/js/upgrade-v15.js', './kt.png', './kt-sidebar.png', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
