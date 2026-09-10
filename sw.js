@@ -1,7 +1,7 @@
-const CACHE_NAME = 'kita-tabung-shell-v15-8-legal-pages';
+const CACHE_NAME = 'kita-tabung-shell-v15-9-cinematic-footer';
 const STATIC_SHELL = [
   './', './index.html', './app.html', './privacy.html', './terms.html', './help.html', './data-delete.html',
-  './assets/app.css', './assets/upgrade-v15.css', './assets/legal.css', './assets/js/error-monitor.js', './assets/js/app.js', './assets/js/upgrade-v15.js', './kt.png', './kt-sidebar.png', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'
+  './assets/app.css', './assets/upgrade-v15.css', './assets/legal.css', './assets/footer-cinematic.webp', './assets/js/error-monitor.js', './assets/js/app.js', './assets/js/upgrade-v15.js', './kt.png', './kt-sidebar.png', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
