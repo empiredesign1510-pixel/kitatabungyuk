@@ -52,11 +52,12 @@ html[data-theme="dark"]{
 .closing-brand{display:inline-flex;align-items:center;gap:13px;color:#fff;text-decoration:none;font-size:1.22rem;font-weight:930;letter-spacing:-.04em}
 .closing-brand img{width:38px;height:38px;object-fit:contain;border-radius:10px;background:#fff}
 .closing-description{max-width:570px;margin:24px 0 0;color:rgba(233,241,249,.78);font-size:.93rem;line-height:1.72}
-.closing-contact{display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-top:30px}
-.contact-link{display:inline-flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-size:.82rem;font-weight:700;transition:opacity .2s var(--ease),transform .2s var(--ease)}
-.contact-link:hover{opacity:.78;transform:translateY(-1px)}
-.contact-icon{width:39px;height:39px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.035)}
-.contact-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.closing-contact{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:30px}
+.contact-link{width:44px;height:44px;display:inline-grid;place-items:center;color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.28);border-radius:50%;background:rgba(255,255,255,.035);transition:opacity .2s var(--ease),transform .2s var(--ease),background .2s var(--ease),border-color .2s var(--ease)}
+.contact-link:hover{opacity:1;transform:translateY(-2px);background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.46)}
+.contact-link:focus-visible{outline:2px solid #5bbef2;outline-offset:3px}
+.contact-icon{width:100%;height:100%;display:grid;place-items:center}
+.contact-icon svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .closing-tagline{display:flex;align-items:center;gap:18px;margin-top:34px;color:#41b7f4;font-size:.65rem;font-weight:900;letter-spacing:.29em;text-transform:uppercase}
 .closing-tagline::before{content:"";width:78px;height:1px;background:rgba(255,255,255,.38)}
 .closing-links{display:flex;flex-direction:column;justify-content:center;gap:3px}
@@ -66,7 +67,7 @@ html[data-theme="dark"]{
 .closing-meta{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:24px;margin-top:8px;padding-top:24px;border-top:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.52);font-size:.72rem}
 .closing-meta strong{color:rgba(255,255,255,.75);font-weight:800}
 @media(max-width:980px){.closing-scene{min-height:860px;padding-top:72px}.closing-shell{width:min(100% - 36px,1580px);min-height:730px}.closing-copy{padding-top:54px}.closing-card{grid-template-columns:1fr;gap:34px;padding:38px 34px}.closing-links{display:grid;grid-template-columns:1fr 1fr}.closing-meta{margin-top:0}.closing-card::after{left:28px;bottom:-26px}}
-@media(max-width:640px){.closing-scene{min-height:auto;padding:70px 0 14px}.closing-shell{width:calc(100% - 22px);min-height:0;gap:52px}.closing-copy{padding:28px 8px 0}.closing-copy h2{font-size:clamp(2.8rem,13vw,4.25rem)}.closing-copy p{font-size:.91rem;max-width:95%}.closing-card{padding:28px 22px 24px;border-radius:28px;gap:26px}.closing-description{font-size:.84rem}.closing-contact{align-items:flex-start;gap:14px;margin-top:24px}.contact-link{width:100%;font-size:.78rem}.closing-tagline{gap:12px;font-size:.58rem;letter-spacing:.2em}.closing-tagline::before{width:44px}.closing-links{grid-template-columns:1fr;gap:0}.closing-links a{font-size:.86rem}.closing-meta{flex-direction:column;align-items:flex-start;gap:8px;padding-top:18px}.closing-card::after{font-size:5.4rem;left:16px;bottom:-14px}}
+@media(max-width:640px){.closing-scene{min-height:auto;padding:70px 0 14px}.closing-shell{width:calc(100% - 22px);min-height:0;gap:52px}.closing-copy{padding:28px 8px 0}.closing-copy h2{font-size:clamp(2.8rem,13vw,4.25rem)}.closing-copy p{font-size:.91rem;max-width:95%}.closing-card{padding:28px 22px 24px;border-radius:28px;gap:26px}.closing-description{font-size:.84rem}.closing-contact{align-items:center;gap:12px;margin-top:24px}.contact-link{width:44px;height:44px}.closing-tagline{gap:12px;font-size:.58rem;letter-spacing:.2em}.closing-tagline::before{width:44px}.closing-links{grid-template-columns:1fr;gap:0}.closing-links a{font-size:.86rem}.closing-meta{flex-direction:column;align-items:flex-start;gap:8px;padding-top:18px}.closing-card::after{font-size:5.4rem;left:16px;bottom:-14px}}
 
 @media(max-width:980px){.nav-shell{width:min(100% - 34px,1760px);grid-template-columns:1fr auto}.hero-brand{justify-self:start}.nav-left{display:none}.nav-right{grid-column:2}.hero-content-wrap{width:min(100% - 54px,1760px)}.hero-copy{width:min(700px,78vw)}.hero-bottom{left:28px;right:110px}.split-heading{grid-template-columns:1fr;gap:20px}.process-line{grid-template-columns:1fr 1fr}.process-line article:nth-child(2){border-right:0}.process-line article:nth-child(-n+2){border-bottom:1px solid var(--line)}.rating-grid{grid-template-columns:1fr 1fr}.trust-panel{grid-template-columns:1fr}.footer-grid{grid-template-columns:1fr;align-items:start}}
 @media(max-width:640px){.wrap{width:min(100% - 26px,1180px)}.nav-shell{width:calc(100% - 24px);min-height:66px;grid-template-columns:1fr auto;gap:10px}.hero-brand{font-size:.95rem;gap:7px}.hero-brand img{width:27px;height:27px}.login-link{display:none}.pill-action{min-height:40px;padding:0 14px;font-size:.75rem}.video-hero{height:100svh;min-height:690px}.hero-content-wrap{width:calc(100% - 30px);align-items:flex-end;padding:90px 0 205px}.hero-copy{width:100%}.hero-kicker{font-size:.78rem;margin-bottom:12px}.hero-copy h1{font-size:clamp(3.05rem,14vw,4.8rem);line-height:.92}.hero-subtitle{font-size:.92rem;max-width:94%;margin-top:15px}.hero-actions{margin-top:22px}.hero-cta{min-height:46px;padding:0 17px;font-size:.8rem}.hero-trust{display:none}.hero-shade{background:linear-gradient(180deg,rgba(3,15,25,.2),rgba(3,15,25,.08) 28%,rgba(3,15,25,.42) 60%,rgba(1,9,16,.82) 100%)}.hero-bottom{left:15px;right:15px;bottom:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:0}.hero-benefit{padding:0 10px}.hero-benefit strong{font-size:.7rem}.hero-benefit span{font-size:.62rem;line-height:1.4}.scroll-cue{display:none}.theme-switcher{right:12px;top:42%;padding:3px}.theme-button{width:38px;height:38px}.section{padding:78px 0}.section-heading{margin-bottom:34px}.section-heading h2{font-size:clamp(2.35rem,11vw,3.6rem)}.feature-grid{grid-template-columns:1fr}.feature-card,.feature-card-wide{grid-column:auto;display:flex;min-height:210px;padding:22px}.feature-card-wide{gap:0}.feature-arrow{position:absolute;right:22px;top:20px}.process-line{grid-template-columns:1fr}.process-line article{min-height:0;padding:24px 0;border-right:0!important;border-bottom:1px solid var(--line)!important}.process-line article:last-child{border-bottom:0!important}.process-line span{margin-bottom:24px}.rating-grid{grid-template-columns:1fr}.rating-card{min-height:0;padding:24px 0}.stars{margin-bottom:22px}.trust-panel{border-radius:26px;padding:28px 22px}.trust-panel h2{font-size:2.65rem}.footer{padding-bottom:40px}.footer-links{gap:12px}.legal{padding:90px 0 35px}.help-grid{grid-template-columns:1fr}}
@@ -227,7 +228,7 @@ html[data-theme="dark"]{
 
     <section class="closing-scene" id="penutup" aria-labelledby="closing-title">
       <div class="closing-scene-media" aria-hidden="true">
-        <img src="/assets/footer-cinematic.webp?v=15.9" alt="" loading="lazy" decoding="async">
+        <img src="/assets/footer-cinematic.webp?v=15.10" alt="" loading="lazy" decoding="async">
       </div>
 
       <div class="closing-shell">
@@ -246,17 +247,14 @@ html[data-theme="dark"]{
             <p class="closing-description">KITA TABUNG membantu kamu mengelola tabungan dan keuangan pribadi dengan lebih jelas dan sederhana. Catat transaksi, atur budget, pantau target, dan jaga data finansial tetap berada dalam kendalimu.</p>
 
             <div class="closing-contact" aria-label="Kontak KITA TABUNG">
-              <a class="contact-link" href="https://www.instagram.com/xdaniel04/" target="_blank" rel="noopener noreferrer" aria-label="Instagram @xdaniel04">
+              <a class="contact-link" href="https://www.instagram.com/xdaniel04/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
                 <span class="contact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.4" cy="6.6" r=".8" fill="currentColor" stroke="none"></circle></svg></span>
-                <span>@xdaniel04</span>
               </a>
-              <a class="contact-link" href="https://www.tiktok.com/@empiredesign04" target="_blank" rel="noopener noreferrer" aria-label="TikTok @empiredesign04">
+              <a class="contact-link" href="https://www.tiktok.com/@empiredesign04" target="_blank" rel="noopener noreferrer" aria-label="TikTok" title="TikTok">
                 <span class="contact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 4v10.2a4.4 4.4 0 1 1-3.4-4.3"></path><path d="M15 4c1.1 2.2 2.7 3.4 5 3.6"></path></svg></span>
-                <span>@empiredesign04</span>
               </a>
-              <a class="contact-link" href="mailto:ramdanipay1510@gmail.com" aria-label="Email ramdanipay1510@gmail.com">
+              <a class="contact-link" href="mailto:ramdanipay1510@gmail.com" aria-label="Email" title="Email">
                 <span class="contact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m4 7 8 6 8-6"></path></svg></span>
-                <span>ramdanipay1510@gmail.com</span>
               </a>
             </div>
 
