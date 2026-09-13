@@ -38,7 +38,7 @@
       <span>KITA TABUNG</span>
     </div>
     
-    <button class="btn-sidebar-add" onclick="openTxModal()">
+    <button class="btn-sidebar-add" onclick="openRecordMethodChooser()">
       <i class="fa-solid fa-plus"></i>
       <span id="t_btn_add_tx">Catat Transaksi</span>
     </button>
@@ -143,7 +143,7 @@
                     aria-pressed="false"
                     title="Sembunyikan nominal saldo"
                   ><i id="balance-visibility-icon" class="fa-solid fa-eye"></i></button>
-                  <button type="button" class="home-circle-action primary" onclick="openTxModal()" aria-label="Catat transaksi" title="Catat transaksi">
+                  <button type="button" class="home-circle-action primary" onclick="openRecordMethodChooser()" aria-label="Catat transaksi" title="Catat transaksi">
                     <i class="fa-solid fa-plus"></i>
                   </button>
                 </div>
@@ -743,6 +743,98 @@
   </div>
 </div>
 
+<!-- Record Method Chooser V15.12 -->
+<div class="modal-overlay" id="modal-record-method">
+  <div class="modal-content record-method-modal" role="dialog" aria-modal="true" aria-labelledby="record-method-title">
+    <div class="modal-header record-method-header">
+      <div>
+        <h2 id="record-method-title">Pilih cara mencatat</h2>
+        <p>Chat, foto struk, suara, atau form manual.</p>
+      </div>
+      <button type="button" class="close-btn" onclick="closeModal('modal-record-method')" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="record-method-grid">
+      <button type="button" class="record-method-card" onclick="openTransactionAssistant('chat')">
+        <span class="record-method-icon"><i class="fa-regular fa-message"></i></span>
+        <strong>Chat Asisten</strong>
+        <span>Ketik transaksi dengan bahasa sehari-hari</span>
+      </button>
+      <button type="button" class="record-method-card" onclick="openReceiptRecordFlow()">
+        <span class="record-method-icon"><i class="fa-solid fa-camera"></i></span>
+        <strong>Foto Struk</strong>
+        <span>Pindai nota dan isi transaksi otomatis</span>
+      </button>
+      <button type="button" class="record-method-card" onclick="openTransactionAssistant('voice')">
+        <span class="record-method-icon"><i class="fa-solid fa-microphone"></i></span>
+        <strong>Voice</strong>
+        <span>Ucapkan transaksi, lalu review hasilnya</span>
+      </button>
+      <button type="button" class="record-method-card" onclick="openManualRecordFlow()">
+        <span class="record-method-icon"><i class="fa-solid fa-pen"></i></span>
+        <strong>Manual</strong>
+        <span>Form lengkap termasuk transfer & utang/piutang</span>
+      </button>
+    </div>
+    <p class="record-method-footnote"><i class="fa-solid fa-shield-halved"></i> Chat dan Voice membuat draft untuk kamu review. Saldo tidak berubah sebelum dikonfirmasi.</p>
+  </div>
+</div>
+
+<!-- Transaction Assistant V15.12 -->
+<div class="modal-overlay" id="modal-transaction-assistant">
+  <div class="modal-content transaction-assistant-modal" role="dialog" aria-modal="true" aria-labelledby="transaction-assistant-title">
+    <div class="modal-header assistant-modal-header">
+      <div class="assistant-identity">
+        <span class="assistant-avatar"><i class="fa-solid fa-wallet"></i></span>
+        <div><h2 id="transaction-assistant-title">Asisten Catat</h2><p><span class="assistant-online-dot"></span> Siap membaca transaksi</p></div>
+      </div>
+      <button type="button" class="close-btn" onclick="closeTransactionAssistant()" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div id="assistant-chat-mode" class="assistant-mode-panel">
+      <div class="assistant-example-list" aria-label="Contoh perintah">
+        <button type="button" onclick="useTransactionExample('Gajian 10 juta masuk BCA')">Gajian 10 juta masuk BCA</button>
+        <button type="button" onclick="useTransactionExample('Transfer 500rb dari BCA ke Mandiri')">Transfer 500rb dari BCA ke Mandiri</button>
+        <button type="button" onclick="useTransactionExample('Makan siang 75rb pakai Gopay')">Makan siang 75rb pakai Gopay</button>
+        <button type="button" onclick="useTransactionExample('Beli kopi 50rb, bensin 100rb pakai BCA')">Beli kopi 50rb, bensin 100rb pakai BCA</button>
+      </div>
+      <div id="assistant-chat-log" class="transaction-assistant-log" aria-live="polite">
+        <div class="transaction-assistant-message assistant">Tulis transaksi seperti kamu biasa ngomong. Saya akan membaca nominal, tipe, dompet, dan kategori lalu membuat draft untuk direview.</div>
+      </div>
+      <form id="transaction-assistant-form" class="transaction-assistant-composer">
+        <input id="transaction-assistant-input" type="text" autocomplete="off" maxlength="700" placeholder="Contoh: makan siang 75rb pakai BCA" aria-label="Tulis transaksi">
+        <button type="button" class="assistant-mic-mini" onclick="switchAssistantToVoice()" aria-label="Catat dengan suara" title="Catat dengan suara"><i class="fa-solid fa-microphone"></i></button>
+        <button type="submit" class="assistant-send" id="transaction-assistant-send" aria-label="Proses transaksi"><i class="fa-solid fa-arrow-up"></i></button>
+      </form>
+    </div>
+
+    <div id="assistant-voice-mode" class="assistant-mode-panel" hidden>
+      <div class="voice-capture-card">
+        <button type="button" id="voice-record-button" class="voice-record-button" onclick="toggleVoiceCapture()" aria-label="Mulai atau hentikan rekaman suara"><i class="fa-solid fa-microphone"></i></button>
+        <strong id="voice-status-title">Ketuk mikrofon untuk mulai</strong>
+        <p id="voice-status-copy">Ucapkan misalnya: “makan siang 75 ribu pakai BCA”.</p>
+        <div id="voice-transcript" class="voice-transcript" aria-live="polite">Belum ada suara yang ditangkap.</div>
+        <div class="voice-actions">
+          <button type="button" class="btn-secondary" onclick="switchAssistantToChat()"><i class="fa-regular fa-keyboard"></i> Ketik</button>
+          <button type="button" class="planner-primary-btn" id="voice-process-button" onclick="processVoiceTranscript()" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> Proses</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="assistant-draft-area" class="assistant-draft-area" hidden>
+      <div class="assistant-draft-head">
+        <div><strong>Draft transaksi</strong><span id="assistant-draft-summary">Periksa sebelum disimpan.</span></div>
+        <span id="assistant-draft-confidence" class="assistant-confidence">—</span>
+      </div>
+      <div id="assistant-draft-list" class="assistant-draft-list"></div>
+      <div class="assistant-draft-actions">
+        <button type="button" class="btn-secondary" onclick="clearAssistantDrafts()">Ulangi</button>
+        <button type="button" class="planner-primary-btn" id="assistant-save-all" onclick="confirmAssistantDrafts()"><i class="fa-solid fa-check"></i> Konfirmasi & Simpan</button>
+      </div>
+      <p class="assistant-draft-note">Transaksi hanya disimpan setelah kamu menekan konfirmasi. Draft yang belum lengkap harus diedit manual.</p>
+    </div>
+  </div>
+</div>
+
 <!-- Transaction Modal -->
 <div class="modal-overlay" id="modal-tx">
   <div class="modal-content">
@@ -1314,6 +1406,7 @@
 <script src="assets/js/error-monitor.js"></script>
 <script src="assets/js/app.js"></script>
 <script src="assets/js/upgrade-v15.js"></script>
+<script src="assets/js/record-input-v15-12.js"></script>
 <div id="toast-stack" class="toast-stack" aria-live="polite" aria-atomic="false"></div>
 <div id="app-toast" class="app-toast" role="status" aria-live="polite"></div>
 </body>

@@ -3296,7 +3296,7 @@ function reviewDashboardFromOnboarding() {
 function onboardingAction(action) {
   if (action === 'wallet') { go('wallet'); openWalletModal(); }
   else if (action === 'budget') { go('budget'); openBudgetModal(); }
-  else if (action === 'transaction') openTxModal();
+  else if (action === 'transaction') openRecordMethodChooser();
   else if (action === 'goal') { go('plan'); openGoalModal(); }
   else if (action === 'dashboard') reviewDashboardFromOnboarding();
 }
@@ -3473,9 +3473,10 @@ function renderHome() {
       }
       const amountColor = item.type === 'income' ? 'var(--success)' : item.type === 'expense' || item.type === 'debt' ? 'var(--danger)' : 'var(--text-main)';
       const receiptBadge = item.receiptMeta ? '<span class="receipt-source-badge"><i class="fa-solid fa-receipt"></i> Struk</span>' : '';
+      const inputBadge = item.inputMeta?.source === 'assistant' ? '<span class="receipt-source-badge assistant-source-badge"><i class="fa-regular fa-message"></i> Chat</span>' : item.inputMeta?.source === 'voice' ? '<span class="receipt-source-badge assistant-source-badge"><i class="fa-solid fa-microphone"></i> Voice</span>' : '';
       txHtml += `<div class="tx-item" onclick="openTxModal('${item.id}')">
         <div class="tx-icon ${icon.cls}"><i class="fa-solid ${icon.icon}"></i></div>
-        <div class="tx-details"><div class="tx-title">${escapeHtml(category || item.category || '-')}</div><div class="tx-sub">${receiptBadge}${escapeHtml(subText)}</div></div>
+        <div class="tx-details"><div class="tx-title">${escapeHtml(category || item.category || '-')}</div><div class="tx-sub">${receiptBadge}${inputBadge}${escapeHtml(subText)}</div></div>
         <div class="tx-amount" style="color:${amountColor}">${icon.sign}${toRp(item.amount)}</div>
       </div>`;
     });
@@ -3634,13 +3635,14 @@ function renderHistory() {
   const filter = $('filter-month').value;
   const txs = state.transactions.filter(t => getMonthKey(t.date) === filter).sort((a,b) => new Date(b.date) - new Date(a.date));
   let html = '';
-  if(txs.length === 0) html = `<div class="empty-action-state"><strong>Belum ada transaksi</strong><p>Catat pemasukan atau pengeluaran pertama supaya riwayat dan ringkasan mulai terbentuk.</p><button type="button" onclick="openTxModal()">Catat Transaksi</button></div>`;
+  if(txs.length === 0) html = `<div class="empty-action-state"><strong>Belum ada transaksi</strong><p>Catat pemasukan atau pengeluaran pertama supaya riwayat dan ringkasan mulai terbentuk.</p><button type="button" onclick="openRecordMethodChooser()">Catat Transaksi</button></div>`;
   else {
     txs.forEach(t => {
       const icn = getIconData(t.type); const acc = state.accounts.find(a => a.id === t.accountId);
       const receiptBadge = t.receiptMeta ? '<span class="receipt-source-badge"><i class="fa-solid fa-receipt"></i> Struk</span>' : '';
+      const inputBadge = t.inputMeta?.source === 'assistant' ? '<span class="receipt-source-badge assistant-source-badge"><i class="fa-regular fa-message"></i> Chat</span>' : t.inputMeta?.source === 'voice' ? '<span class="receipt-source-badge assistant-source-badge"><i class="fa-solid fa-microphone"></i> Voice</span>' : '';
       html += `<div class="tx-item"><div class="tx-icon ${icn.cls}"><i class="fa-solid ${icn.icon}"></i></div>
-          <div class="tx-details"><div class="tx-title">${escapeHtml(t.category)}</div><div class="tx-sub">${receiptBadge}${t.smartCategory ? `<span class=\"smart-category-badge\">${escapeHtml(t.smartCategory)}</span>` : ''}${t.date} • ${escapeHtml(acc ? acc.name : '?')}</div></div>
+          <div class="tx-details"><div class="tx-title">${escapeHtml(t.category)}</div><div class="tx-sub">${receiptBadge}${inputBadge}${t.smartCategory ? `<span class=\"smart-category-badge\">${escapeHtml(t.smartCategory)}</span>` : ''}${t.date} • ${escapeHtml(acc ? acc.name : '?')}</div></div>
           <div style="text-align:right;"><div class="tx-amount" style="color: ${t.type === 'income' ? 'var(--success)' : 'var(--text-main)'}">${icn.sign}${toRp(t.amount)}</div>
             <div style="margin-top:5px;"><button onclick="openTxModal('${t.id}')" aria-label="Edit transaksi ${escapeHtml(t.category)}" style="background:none; border:none; color:var(--primary); cursor:pointer; margin-right:10px;"><i class="fa-solid fa-pen"></i></button>
               <button onclick="deleteTx('${t.id}')" aria-label="Hapus transaksi ${escapeHtml(t.category)}" style="background:none; border:none; color:var(--danger); cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
